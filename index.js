@@ -217,8 +217,7 @@ var Pokemon = {
 var welcomeMessage = "Hello, there! Glad to meet you! Welcome to the world of Pokémon! My name is Oak. People affectionately refer to me as the Pokémon Professor. This world… …is inhabited far and wide by creatures called Pokémon! For some people, Pokémon are pets. Other use them for battling. As for myself… I study Pokémon as a profession. But first, tell me a little about yourself. Now tell me. Are you a boy or a girl?";
 var goodbyeMessage = "Instead of continuing your adventure to become a Pokemon master, you go home to mom and live with her forever.";
 
-// This is the message that is repeated if the response to the choose sex question is not heard //var repeatChooseSex = "Are you an Onix or a Cloyster?";
-//var unhandledSex = "There are only two genders in Kanto! Please say boy or girl";
+var repeatChooseSex = "Are you an Onix or a Cloyster?";
 
 
 // unhandled intent prompts
@@ -260,7 +259,7 @@ var newSessionHandler = {
     this.handler.state = states.STARTMODE;
     this.attributes['goodbyeMessage'] = " blacked out! ";
     this.attributes['movementState'] = 0;
-    this.emit(':ask', welcomeMessage, unhandledSex);
+    this.emit(':ask', welcomeMessage, repeatChooseSex);
   },'AMAZON.HelpIntent': function () {
     this.handler.state = states.STARTMODE;
     this.emit(':ask', helpMessage, helpMessage);
@@ -317,7 +316,6 @@ var askNameHandlers = Alexa.CreateStateHandler(states.NAMEMODE, {
         var response = "Right… So your name is " + playerName + ". This is my grandson. He's been your rival since you both were babies. …Erm, what was his name now?";
         this.handler.state = states.RIVALMODE;
         this.emit(':ask', response, response);
-        //this.emit(':ask', "Hello " + nodes[1].message, playerName);
     },
     'AMAZON.HelpIntent': function () {
         this.emit(':ask', helpName, helpName);
