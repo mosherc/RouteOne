@@ -655,6 +655,7 @@ var helper = {
             var def = move.cat == "physical" ? opp.stats.def : opp.stats.spdef;
             var damage = ((2*poke.level/5+2)*move.damage*atk/def*(1/50)+2) * modifier;
         }
+        return Math.max(1, damage);
     },
     calcCrit: function() {
         var rand = Math.random()
