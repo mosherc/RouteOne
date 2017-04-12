@@ -17,7 +17,6 @@ var states = {
 
 var attacks = {
     'growl':{
-        'level': 3,
         'type': 'normal',
         'cat': 'status',
         'power': 0,
@@ -30,7 +29,13 @@ var attacks = {
         }
     },
     'tackle':{
-        'level': 1,
+        'type': 'normal',
+        'cat': 'physical',
+        'power': 40,
+        'accuracy': 100,
+        'pp': 35
+    },
+    'scratch':{
         'type': 'normal',
         'cat': 'physical',
         'power': 40,
@@ -38,7 +43,6 @@ var attacks = {
         'pp': 35
     },
     'tailwhip':{
-        'level': 4,
         'type': 'normal',
         'cat': 'status',
         'power': 0,
@@ -51,7 +55,6 @@ var attacks = {
         }
     },
     'thundershock': {
-        'level': 1,
         'type': 'electric',
         'cat': 'special',
         'power': 40,
@@ -74,8 +77,8 @@ var Pokemon = {
         },
         'type': ['grass', 'poison'],
         'learnset': {
-            'tackle': attacks.tackle,
-            'growl': attacks.growl
+            '1': attacks.tackle,
+            '3': attacks.growl
         }
     },
     'squirtle':{
@@ -90,8 +93,8 @@ var Pokemon = {
         },
         'type': ['water'],
         'learnset': {
-            'tackle': attacks.tackle,
-            'tailwhip': attacks.tailwhip
+            '1': attacks.tackle,
+            '4': attacks.tailwhip
         }
     },
     'charmander':{
@@ -106,8 +109,8 @@ var Pokemon = {
         },
         'type': ['fire'],
         'learnset': {
-            'tackle': attacks.tackle,
-            'growl': attacks.growl
+            '1': attacks.tackle,
+            '2': attacks.scratch
         }
     },
     'eevee':{
@@ -122,8 +125,8 @@ var Pokemon = {
         },
         'type': ['normal'],
         'learnset': {
-            'tackle': attacks.tackle,
-            'growl': attacks.growl
+            '1': attacks.scratch,
+            '2': attacks.growl
         }
     },
     'pikachu':{
@@ -138,75 +141,12 @@ var Pokemon = {
         },
         'type': ['electric'],
         'learnset': {
-            'tailwhip': attacks.tackle,
-            'growl': attacks.growl,
-            'thundershock': attacks.thundershock
+            '1': attacks.tackle,
+            '5': attacks.growl,
+            '2': attacks.thundershock
         }
     }
 }
-
-// Questions
-//var nodes = [{
-//        "node": 1,
-//        "message": "Let's Begin with your name. What is it?",
-//        "next": 2
-//    },
-//    {
-//        "node": 2,
-//        "message": `Right… So your name is ${playerName}. This is my grandson. He's been your rival since you both were babies. …Erm, what was his name now?`,
-//        "next": 3
-//    },
-//    {
-//        "node": 3,
-//        "message": '…Er, was it ' + rivalName + '? Thats right! I remember now! His name is ' + rivalName + '! ' + playerName + '! Your own very Pokémon legend is about to unfold! A world of dreams and adventures with Pokémon awaits! Lets go! <break/> You speak with mom and she says: <break/> ...Right. All boys leave home someday. It said so on TV. Prof. Oak, next door, is looking for you. <break/> Are you ready to go to the lab?',
-//        "next": 4
-//    },
-//    {
-//        "node": 4,
-//        "message": "You see your rival in the lab and he says: <break/> What? It's only " + playerName + "? Gramps isn't around. Would you like to go to the grass next to find some pokemon?",
-//        "yes": 5
-//    },
-//    {
-//        "node": 5,
-//        "message": "Oak: <break/> Hey! Wait! Don't go oat! It's unsafe! Wild Pokemon live in tall grass! You need your own Pokemon for your protection. I know! Here, come with me! <break/> You follow Oak to the lab where your rival is waiting. <break/> " + rivalName + ": Gramps! I'm fed up with waiting! <break/> Oak: " + rivalName + "? Let me think… Oh, that's right, I told you to come! Just wait! Here, " + playerName + "! There are three Pokémon here. Haha! The Pokémon are held inside these Poké Balls. When I was young, I was a serious Pokémon Trainer. But now, in my old age, I have only these three left. You can have one. Go on, choose! " + rivalName + ": \"Hey! Gramps! No fair! What about me? Oak: Be patient! " + rivalName + ". You can have one, too!"
-//    },
-//    {
-//        "node": 6,
-//        "message": "Do you choose Bulbasaur, the grass Pokemon, Charmander, the fire Pokemon, or Squirtle, the water Pokemon?",
-//        "bulbasaur": 7,
-//        "charmander": 8,
-//        "squirtle": 9,
-//        "pikachu": 10
-//    },
-//    {
-//        "node": 7,
-//        "message": "I see! Bulbasaur is your choice. It's very easy to raise. So, " + playerName + ", you want to go with the Grass Pokemon Bulbasaur?",
-//        "yes": 11,
-//        "no": 6
-//    },
-//    {
-//        "node": 8,
-//        "message": "Ah! Charmander is your choice. You should raise it patiently. So, " + playerName + ", you're claiming the Fire Pokemon Charmander?",
-//        "yes": 11,
-//        "no": 6
-//    },
-//    {
-//        "node": 9,
-//        "message": "Hm! Squirtle is your choice. It's one worth raising. So, " + playerName + ", you've decided on the Water Pokemon Squirtle?",
-//        "yes": 11,
-//        "no": 6
-//    },
-//    {
-//        "node": 10,
-//        "message": "Oh! It's name is Pikachu. It's also known as the Electric Mouse. It's usually shy, but can sometimes have an electrifying personality. Shocking isn't it? So, " + playerName + ", do you want to be the very best, like no one ever was?",
-//        "yes": 11,
-//        "no": 6
-//    },
-//    {
-//        "node": 11,
-//        "message": "hello"
-//    }
-//];
 
 // This is the intial welcome message
 var welcomeMessage = "Hello, there! Glad to meet you! Welcome to the world of Pokémon! My name is Oak. People affectionately refer to me as the Pokémon Professor. This world… …is inhabited far and wide by creatures called Pokémon! For some people, Pokémon are pets. Other use them for battling. As for myself… I study Pokémon as a profession. But first, tell me a little about yourself. Now tell me. Are you a boy or a girl?";
@@ -255,6 +195,7 @@ var newSessionHandler = {
     this.handler.state = states.STARTMODE;
     this.attributes['goodbyeMessage'] = " blacked out! ";
     this.attributes['movementState'] = 0;
+    this.attributes['Squirtle'] = helper.generatePokemon("squirtle", true, false);
     this.emit(':ask', welcomeMessage, unhandledSex);
   },'AMAZON.HelpIntent': function () {
     this.handler.state = states.STARTMODE;
@@ -454,9 +395,14 @@ var askPokemonHandlers = Alexa.CreateStateHandler(states.CHOOSEPOKEMONMODE, {
             }
             //this.handler.state = states.BATTLEMODE;
             this.attributes['battle'] = "first";
-            //this.attributes['party'] = [helper.generatePokemon(starter, true)];
+            
+            starter = helper.generatePokemon(starter, true, false);
+            rivalStarter = helper.generatePokemon(rivalStarter, true, false);
+            
+            this.attributes['party'] = [starter];
+            
             this.attributes['bag'] = [];
-            this.emit(':tell', playerName + " received the " + starter + " from Professor Oak! Your rival walks over to the " + rivalStarter + " and says, I'll take this one then! " + rivalName + " received the " + rivalStarter + " from Professor Oak! Oak says, if a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town. " + rivalName + " stops you and says, Wait, " + playerName + "! Let's check out our Pokemon! Come on, I'll take you on! ... Rival " + rivalName + " would like to battle! Rival " + rivalName + " sent out " + rivalStarter + "! Go! " + starter + "! Oak interjects saying, Oh for Pete's sake...So pushy as always. " + rivalName + ". You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. The trainer that makes the other trainer's Pokemon faint by lowering their hp to zero wins. But rather than talking about it, you'll learn more from experience. Try battling and see for yourself. What will "+playerName+" do? You can say either fight, switch pokemon, open bag, or run away. Just kidding, you black out after realizing the demo is over!");
+            this.emit(':tell', playerName + " received the " + starter + " from Professor Oak! Your rival walks over to the " + rivalStarter + " and says, I'll take this one then! " + rivalName + " received the " + rivalStarter + " from Professor Oak! Oak says, if a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town. " + rivalName + " stops you and says, Wait, " + playerName + "! Let's check out our Pokemon! Come on, I'll take you on! ... Rival " + rivalName + " would like to battle! Rival " + rivalName + " sent out " + rivalStarter + "! Go! " + starter + "! Oak interjects saying, Oh for Pete's sake...So pushy as always. " + rivalName + ". You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. The trainer that makes the other trainer's Pokemon faint by lowering their hp to zero wins. But rather than talking about it, you'll learn more from experience. Try battling and see for yourself. What will "+playerName+" do? You can say either fight, switch pokemon, open bag, or run away.");
             //<audio src='https://66.90.93.122/ost/pokemon-original-game-soundtrack/zawnfmpnge/105-rival-appears.mp3'/>
         }
         else {
@@ -498,17 +444,26 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLEMODE, {
     
     'FightIntent': function () {
         var battleType = this.attributes['battle'];
-        var response;
+        var playerName = this.attributes['playerName'];
         
-        if(battleType == "first"){
-            
-        } else if(battleType == "trainer") {
-            
-        } else if(battleType == "encounter") {
-            
-        } else {
-            //invalid battle type
-        }
+        var poke = this.attributes['party'][0];
+        var moves = poke.learnset;
+        this.attributes['moveset'] = moves; 
+        var moveString = poke.learset[0]+", "+poke.learnset[1]+", "+poke.learnset[2]+", and "+poke.learnset[3];
+        
+        var response = "Your " + poke.name + " knows " + moveString + ". Please select one of these moves!";
+        
+        this.emit(':ask', response, response);
+        
+//        if(battleType == "first"){
+//            
+//        } else if(battleType == "trainer") {
+//            
+//        } else if(battleType == "encounter") {
+//            
+//        } else {
+//            //invalid battle type
+//        }
     },
     'BagIntent': function () {
         if(this.attributes['bag'].length == 0) {
@@ -544,6 +499,23 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLEMODE, {
     },
     'RunIntent': function () {
         
+    },
+    'ChooseMoveIntent': function () {
+        var chosenMove = this.event.request.intent.slots.Move.value.replaceAll("\\s", "").toLowerCase();
+        var moveset = this.attributes['moveset'];
+        var response;
+        
+        if(moveset.indexOf(chosenMove) > -1){
+            //move is in moveset
+            
+            
+            
+            this.emit(':ask', "blah", "blah");
+        } else {
+            //move is not in moveset
+            response = "That is not an available move. Please choose a different option or move";
+            this.emit(':ask', response, response);
+        }
     },
     'AMAZON.HelpIntent': function () {
         this.emit(':ask', helpBattle, helpBattle);
@@ -605,9 +577,12 @@ var helper = {
         max = Math.floor(max);
         return Math.floor(Math.random() * (max-min+1)) + min;
     },
-    generatePokemon: function(pokemon, starter) {
+    
+    //name is official name of pokemon, starter is boolean true if pokemon is a starter (level 5) wild is boolean for wild (true) or not (false)
+    generatePokemon: function(name, starter, wild) {
         var poke = {
-            'name': pokemon,
+            'name': name,
+            'type': Pokemon[name].type,
             'IVs': {
                 'hp': helper.generateRandomInt(0,31),
                 'spdef': helper.generateRandomInt(0,31),
@@ -624,24 +599,101 @@ var helper = {
                 'atk': 1,
                 'speed': 1
             },
-            'EVs': 0
+            'stats':{
+            },
+            'EVs': 0,
+            'wild': wild
         }
         if(starter) {
             poke.level = 5;
         } else {
             poke.level = helper.generateRandomInt(Math.max(this.attributes['movementState']*2/3-2, 1), Math.min(this.attributes['movementState']*2/3+2, 100));
         }
-        poke.hp = Math.floor((2*Pokemon['pokemon'].base.hp+poke.IVs.hp+Math.floor(poke.EVs/4))/100)+poke.level+10;
+        
+        poke.learnset = [];
+        for(move in Pokemon[name].learnset){
+            if(move <= poke.level){
+                poke.learnset.push(move);
+            }
+        }
+        if(Object.keys(poke.learnset).length > 4){
+            poke.learnset = helper.getRandomSubarray(poke.learnset, 4);
+        }
+        
+        poke.exp = Math.pow(poke.level, 3);
+        poke.hp = Math.floor((2*Pokemon[name].base.hp+poke.IVs.hp+Math.floor(poke.EVs/4))/100)+poke.level+10;
         function returnStat(stat) {
-            stat = Math.floor((Math.floor((2*Pokemon['pokemon'].base['stat']+poke.IVs['stat']+Math.floor(poke.EVs/4))*poke.level)/100)+5);
+            stat = Math.floor((Math.floor((2*Pokemon[name].base[stat]+poke.IVs[stat]+Math.floor(poke.EVs/4))*poke.level)/100)+5);
             return stat;
         }
-        poke.spdef = returnStat(spdef);
-        poke.spatk = returnStat(spatk);
-        poke.def = returnStat(def);
-        poke.atk = returnStat(atk);
-        poke.speed = returnStat(speed);
+        poke.stats.spdef = returnStat('spdef');
+        poke.stats.spatk = returnStat('spatk');
+        poke.stats.def = returnStat('def');
+        poke.stats.atk = returnStat('atk');
+        poke.stats.speed = returnStat('speed');
+        poke.stats.hp = returnStat('hp');
         
         return poke;
+    },
+    addExperience: function(poke, opp) {
+        var a = opp.wild == true ? 1 : 1.5;
+        var b = (poke.stats.spdef +poke.stats.spatk +poke.stats.def +poke.stats.atk +poke.stats.speed +poke.stats.hp)/6;
+        var L = opp.level;
+        poke.exp+=a*b*L/(7);
+        helper.checkLevelUp(poke);
+    },
+    checkLevelUp: function(poke) {
+        var level = helper.nthroot(poke.exp, 3);
+        if(Math.floor(level) > poke.level){
+            poke.level++;
+        }
+    },
+    calcDamage: function(poke, opp, move) {
+        var modifier = calcCrit() * calcRandDamage() * calcSTAB(poke, move);
+        if(move.cat != "status"){
+            var atk = move.cat == "physical" ? poke.stats.atk : poke.stats.spatk;
+            var def = move.cat == "physical" ? opp.stats.def : opp.stats.spdef;
+            var damage = ((2*poke.level/5+2)*move.damage*atk/def*(1/50)+2) * modifier;
+        }
+    },
+    calcCrit: function() {
+        var rand = Math.random()
+        if(rand <= .0625){
+            return 2;
+        }
+        return 1;
+    },
+    calcRandDamage: function() {
+        return 1 - Math.random()*.15;
+    },
+    calcSTAB: function(poke, move) {
+        if(move.type == poke.type[0] || move.type == poke.type[1]){
+            return 1.5;
+        }
+        return 1;
+    },
+    nthroot: function(x, n){
+        try {
+            var negate = n % 2 == 1 && x < 0;
+            if(negate) {
+                x = -x;
+            }
+            var possible = Math.pow(x, 1 / n);
+            n = Math.pow(possible, n);
+            if(Math.abs(x - n) < 1 && (x > 0 == n > 0)) {
+                return negate ? -possible : possible;
+            }
+        } catch(e){}
+    },
+    getRandomSubarray: function (arr, size) {
+        var shuffled = arr.slice(0), i = arr.length, temp, index;
+        while (i--) {
+            index = Math.floor((i + 1) * Math.random());
+            temp = shuffled[index];
+            shuffled[index] = shuffled[i];
+            shuffled[i] = temp;
+        }
+        return shuffled.slice(0, size);
     }
+}
 };
