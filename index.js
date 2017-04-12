@@ -222,7 +222,7 @@ var goodbyeMessage = "Instead of continuing your adventure to become a Pokemon m
 
 
 // unhandled intent prompts
-var unhandledSex = "Please say boy or girl.";
+var unhandledSex = "There are only two genders in Kanto! Please say boy or girl.";
 var unhandledGeneral = "I didn't quite catch that, can you repeat it?";
 var unhandledPokemon = "This isn't Digimon, please select your starter Pokemon, Bulbasaur, Squirtle, or Charmander. If you have already chosen one, say yes to confirm or no to choose again.";
 
@@ -417,22 +417,25 @@ var askMovementHandlers = Alexa.CreateStateHandler(states.MOVEMENTMODE, {
 var askPokemonHandlers = Alexa.CreateStateHandler(states.CHOOSEPOKEMONMODE, {
     
     'ChoosePokemonIntent': function () {
-        this.attributes['starter'] = this.event.request.intent.slots.Pokemon.value;
-        var starter = this.attributes['starter'];
+        var starter = this.event.request.intent.slots.Pokemon.value;
         var playerName = this.attributes['playerName'];
         var response;
         
         if(starter == "bulbasaur") {
             response = "I see! Bulbasaur is your choice. It's very easy to raise. So, " + playerName + ", you want to go with the Grass Pokemon Bulbasaur?";
+            this.attributes['starter'] = starter;
         }
         else if(starter == "charmander") {
             response = "Ah! Charmander is your choice. You should raise it patiently. So, " + playerName + ", you're claiming the Fire Pokemon Charmander?";
+            this.attributes['starter'] = starter;
         }
         else if(starter == "squirtle") {
             response = "Hm! Squirtle is your choice. It's one worth raising. So, " + playerName + ", you've decided on the Water Pokemon Squirtle?";
+            this.attributes['starter'] = starter;
         }
         else if(starter == "Pikachū") {
             response = "Oh! It's name is Pikachu. It's also known as the Electric Mouse. It's usually shy, but can sometimes have an electrifying personality. Shocking isn't it? So, " + playerName + ", do you want to be the very best, like no one ever was?";
+            this.attributes['starter'] = starter;
         } else {
             this.emit(':ask', unhandledPokemon, unhandledPokemon);
         }
@@ -462,7 +465,7 @@ var askPokemonHandlers = Alexa.CreateStateHandler(states.CHOOSEPOKEMONMODE, {
             //<audio src='https://66.90.93.122/ost/pokemon-original-game-soundtrack/zawnfmpnge/105-rival-appears.mp3'/>
         }
         else {
-            this.emit(':ask', "Please choose your Pokemon");
+            this.emit(':ask', "Please choose either Bulbasaur, Squirtle, or Charmander.");
         }
     },
     'AMAZON.NoIntent': function () {
