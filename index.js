@@ -465,6 +465,7 @@ var askPokemonHandlers = Alexa.CreateStateHandler(states.CHOOSEPOKEMONMODE, {
     },
     'AMAZON.NoIntent': function () {
         if(typeof this.attributes['starter'] !== 'undefined'){
+            this.attributes['starter'] = undefined;
             this.emit(':ask', "Ok, select a different Pokemon");
         }
         else {
