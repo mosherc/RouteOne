@@ -405,9 +405,11 @@ var askPokemonHandlers = Alexa.CreateStateHandler(states.CHOOSEPOKEMONMODE, {
             rivalStarter = helper.generatePokemon(rivalStarter, true, false);
             
             this.attributes['party'] = [starter];
+            this.attributes['oppParty'] = [rivalStarter];
             
             this.attributes['bag'] = [];
-            this.emit(':tell', playerName + " received the " + starter + " from Professor Oak! Your rival walks over to the " + rivalStarter + " and says, I'll take this one then! " + rivalName + " received the " + rivalStarter + " from Professor Oak! Oak says, if a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town. " + rivalName + " stops you and says, Wait, " + playerName + "! Let's check out our Pokemon! Come on, I'll take you on! ... Rival " + rivalName + " would like to battle! Rival " + rivalName + " sent out " + rivalStarter + "! Go! " + starter + "! Oak interjects saying, Oh for Pete's sake...So pushy as always. " + rivalName + ". You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. The trainer that makes the other trainer's Pokemon faint by lowering their hp to zero wins. But rather than talking about it, you'll learn more from experience. Try battling and see for yourself. What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.");
+            this.emit(':tell', "hello");
+//            this.emit(':tell', playerName + " received the " + starter.name + " from Professor Oak! Your rival walks over to the " + rivalStarter.name + " and says, I'll take this one then! " + rivalName + " received the " + rivalStarter.name + " from Professor Oak! Oak says, if a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town. " + rivalName + " stops you and says, Wait, " + playerName + "! Let's check out our Pokemon! Come on, I'll take you on! ... Rival " + rivalName + " would like to battle! Rival " + rivalName + " sent out " + rivalStarter.name + "! Go! " + starter.name + "! Oak interjects saying, Oh for Pete's sake...So pushy as always. " + rivalName + ". You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. The trainer that makes the other trainer's Pokemon faint by lowering their hp to zero wins. But rather than talking about it, you'll learn more from experience. Try battling and see for yourself. What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.");
             //<audio src='https://66.90.93.122/ost/pokemon-original-game-soundtrack/zawnfmpnge/105-rival-appears.mp3'/>
         }
         else {
@@ -450,6 +452,7 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLEMODE, {
     'FightIntent': function () {
         var battleType = this.attributes['battle'];
         var playerName = this.attributes['playerName'];
+        this.attributes['switchState'] = 0;
         
         var poke = this.attributes['party'][0];
         var moves = poke.learnset;
@@ -485,20 +488,30 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLEMODE, {
         var healthy;
         var healthyArr;
         var response;
+        var party = this.attributes['party'];
+        var switchIn;
         
-        for(var i = 0; i<this.attributes['party'].length; i++){
-            if(this.attributes['party'][i].hp > 0){
-                healthy += this.attributes['party'][i].name + ", ";
-                healthyArr.push(this.attributes['party']);
+        if(this.attributes['switchState'] === 0){
+            // create healthy pokemon subarray
+            for(var i = 0; i < party.length; i++){
+                if(party[i].hp > 0){
+                    healthy += party[i].name + ", ";
+                    healthyArr.push(party[i]);
+                }
             }
-        }
-        if(healthyArr.length > 1) {
-            response = "Which healthy Pokemon would you like to use? You have the following healthy Pokemon: " + healthy + ". Please say it in the form of 'switch Pikachu' for example";
-            this.emit(':ask', response, response);
-        } else if(healthyArr.length == 1) {
-            this.emit(':ask', "You don't have any other Pokemon! Please choose fight, open bag, or run away.", "You don't have any other Pokemon! Please choose fight, open bag, or run away.");
-        } else if(healthyArr.length === 0) {
-            this.emit(':tell', "You blacked out!");
+            if(healthyArr.length > 1) {
+                this.attributes['switchState'] = 1;
+                response = "Which healthy Pokemon would you like to use? You have the following healthy Pokemon: " + healthy + ". Please say it in the form of 'switch Pikachu' for example";
+                this.emit(':ask', response, response);
+            } else if(healthyArr.length == 1) {
+                this.emit(':ask', "You don't have any other Pokemon! Please choose fight, open bag, or run away.", "You don't have any other Pokemon! Please choose fight, open bag, or run away.");
+            } else if(healthyArr.length === 0) {
+                this.emit(':tell', "You blacked out!");
+            }
+        } else {
+            // switch Pokemon using slot
+            switchIn = this.event.request.intent.slots.Pokemon.value;
+            helper.switchPokemon()
         }
     },
     'RunIntent': function () {
@@ -573,9 +586,9 @@ var askQuestionHandlers = Alexa.CreateStateHandler(states.ASKMODE, {
 var helper = {
     
     switchPokemon: function(party, p1, p2) {
-        var a = party['p1'];
-        party['p1'] = party['p2'];
-        party['p2'] = a;
+        var a = party[p1];
+        party[p1] = party[p2];
+        party[p2] = a;
     },
     generateRandomInt: function(min, max){
         min = Math.ceil(min);
