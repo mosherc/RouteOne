@@ -17,6 +17,7 @@ var states = {
 
 var attacks = {
     'growl':{
+        'name': 'growl',
         'type': 'normal',
         'cat': 'status',
         'power': 0,
@@ -29,6 +30,7 @@ var attacks = {
         }
     },
     'tackle':{
+        'name': 'tackle',
         'type': 'normal',
         'cat': 'physical',
         'power': 40,
@@ -36,6 +38,7 @@ var attacks = {
         'pp': 35
     },
     'scratch':{
+        'name': 'scratch',
         'type': 'normal',
         'cat': 'physical',
         'power': 40,
@@ -43,6 +46,7 @@ var attacks = {
         'pp': 35
     },
     'tailwhip':{
+        'name': 'tailwhip',
         'type': 'normal',
         'cat': 'status',
         'power': 0,
@@ -55,6 +59,7 @@ var attacks = {
         }
     },
     'thundershock': {
+        'name': 'thundershock',
         'type': 'electric',
         'cat': 'special',
         'power': 40,
@@ -402,7 +407,7 @@ var askPokemonHandlers = Alexa.CreateStateHandler(states.CHOOSEPOKEMONMODE, {
             this.attributes['party'] = [starter];
             
             this.attributes['bag'] = [];
-            this.emit(':tell', playerName + " received the " + starter + " from Professor Oak! Your rival walks over to the " + rivalStarter + " and says, I'll take this one then! " + rivalName + " received the " + rivalStarter + " from Professor Oak! Oak says, if a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town. " + rivalName + " stops you and says, Wait, " + playerName + "! Let's check out our Pokemon! Come on, I'll take you on! ... Rival " + rivalName + " would like to battle! Rival " + rivalName + " sent out " + rivalStarter + "! Go! " + starter + "! Oak interjects saying, Oh for Pete's sake...So pushy as always. " + rivalName + ". You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. The trainer that makes the other trainer's Pokemon faint by lowering their hp to zero wins. But rather than talking about it, you'll learn more from experience. Try battling and see for yourself. What will "+playerName+" do? You can say either fight, switch pokemon, open bag, or run away.");
+            this.emit(':tell', playerName + " received the " + starter + " from Professor Oak! Your rival walks over to the " + rivalStarter + " and says, I'll take this one then! " + rivalName + " received the " + rivalStarter + " from Professor Oak! Oak says, if a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town. " + rivalName + " stops you and says, Wait, " + playerName + "! Let's check out our Pokemon! Come on, I'll take you on! ... Rival " + rivalName + " would like to battle! Rival " + rivalName + " sent out " + rivalStarter + "! Go! " + starter + "! Oak interjects saying, Oh for Pete's sake...So pushy as always. " + rivalName + ". You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. The trainer that makes the other trainer's Pokemon faint by lowering their hp to zero wins. But rather than talking about it, you'll learn more from experience. Try battling and see for yourself. What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.");
             //<audio src='https://66.90.93.122/ost/pokemon-original-game-soundtrack/zawnfmpnge/105-rival-appears.mp3'/>
         }
         else {
@@ -448,8 +453,7 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLEMODE, {
         
         var poke = this.attributes['party'][0];
         var moves = poke.learnset;
-        this.attributes['moveset'] = moves; 
-        var moveString = poke.learset[0] + ", " + poke.learnset[1] + ", " + poke.learnset[2] + ", and " + poke.learnset[3];
+        var moveString = moves[0] + ", " + moves[1] + ", " + moves[2] + ", and " + moves[3];
         
         var response = "Your " + poke.name + " knows " + moveString + ". Please select one of these moves!";
         
@@ -501,8 +505,9 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLEMODE, {
         
     },
     'ChooseMoveIntent': function () {
+        var poke = this.attributes['party'][0];
         var chosenMove = this.event.request.intent.slots.Move.value.replaceAll("\\s", "").toLowerCase();
-        var moveset = this.attributes['moveset'];
+        var moveset = poke.learnset;
         var response;
         
         if(moveset.indexOf(chosenMove) > -1){
@@ -613,7 +618,7 @@ var helper = {
         poke.learnset = [];
         for(move in Pokemon[name].learnset){
             if(move <= poke.level){
-                poke.learnset.push(move);
+                poke.learnset.push(Pokemon[name].learnset[move]);
             }
         }
         if(Object.keys(poke.learnset).length > 4){
