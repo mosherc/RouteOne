@@ -449,7 +449,7 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLEMODE, {
         var poke = this.attributes['party'][0];
         var moves = poke.learnset;
         this.attributes['moveset'] = moves; 
-        var moveString = poke.learset[0]+", "+poke.learnset[1]+", "+poke.learnset[2]+", and "+poke.learnset[3];
+        var moveString = poke.learset[0] + ", " + poke.learnset[1] + ", " + poke.learnset[2] + ", and " + poke.learnset[3];
         
         var response = "Your " + poke.name + " knows " + moveString + ". Please select one of these moves!";
         
@@ -493,7 +493,7 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLEMODE, {
             this.emit(':ask', response, response);
         } else if(healthyArr.length == 1) {
             this.emit(':ask', "You don't have any other Pokemon! Please choose fight, open bag, or run away.", "You don't have any other Pokemon! Please choose fight, open bag, or run away.");
-        } else if(healthyArr.length == 0) {
+        } else if(healthyArr.length === 0) {
             this.emit(':tell', "You blacked out!");
         }
     },
@@ -697,4 +697,3 @@ var helper = {
         return shuffled.slice(0, size);
     }
 }
-};
