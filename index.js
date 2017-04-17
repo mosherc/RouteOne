@@ -191,16 +191,13 @@ var Pokemon = {
     }
 };
 var pokedex = ["squirtle", "charmander", "bulbasaur", "Pikachū", "eevee"];
-console.log(modifiers);
+console.log(pokedex);
 
 // This is the intial welcome message
 var welcomeMessage = "Hello, there! Glad to meet you! Welcome to the world of Pokémon! My name is Oak. People affectionately refer to me as the Pokémon Professor. This world… …is inhabited far and wide by creatures called Pokémon! For some people, Pokémon are pets. Other use them for battling. As for myself… I study Pokémon as a profession. But first, tell me a little about yourself. Now tell me. Are you a boy or a girl?";
 var goodbyeMessage = "Instead of continuing your adventure to become a Pokemon master, you go home to mom and live with her forever.";
 
-<<<<<<< HEAD
-=======
 // This is the message that is repeated if the response to the choose sex question is not heard 
->>>>>>> origin/master
 var repeatChooseSex = "Are you an Onix or a Cloyster?";
 
 var battleOverMessage = "Where would you like to go next? You can say 'Go to the PokeCenter' or 'Go to the Pokemart' or 'Keep going' or 'Move Along' to continue.";
@@ -250,14 +247,10 @@ var newSessionHandler = {
     this.handler.state = states.STARTMODE;
     this.attributes['goodbyeMessage'] = " blacked out! ";
     this.attributes['movementState'] = 0;
-<<<<<<< HEAD
-    this.emit(':ask', welcomeMessage, repeatChooseSex);
-=======
     this.attributes['money'] = 0;
     this.attributes['bag'] = [];
     this.attributes['party'] = [];
     this.emit(':ask', welcomeMessage, unhandledSex);
->>>>>>> origin/master
   },'AMAZON.HelpIntent': function () {
     this.handler.state = states.STARTMODE;
     this.emit(':ask', helpMessage, helpMessage);
@@ -313,6 +306,7 @@ var askNameHandlers = Alexa.CreateStateHandler(states.NAMEMODE, {
         var response = "Right… So your name is " + playerName + ". This is my grandson. He's been your rival since you both were babies. …Erm, what was his name now?";
         this.handler.state = states.RIVALMODE;
         this.emit(':ask', response, response);
+        //this.emit(':ask', "Hello " + nodes[1].message, playerName);
     },
     'AMAZON.HelpIntent': function () {
         this.emit(':ask', helpName, helpName);
@@ -606,7 +600,7 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
         
         //Need to check if player must use struggle because out of PP on all moves
         console.log(moveset.indexOf(chosenMove));
-        if(moveset.indexOf(chosenMove) > -1){
+        if(helper.hasMove(poke, moveset) > -1){
             //move is in moveset
             var move = moveset[chosenMove];
             
@@ -1239,6 +1233,14 @@ var helper = {
     },
     calcSTAB: function(poke, move) {
         return (move.type == poke.type[0] || move.type == poke.type[1]) ? 1.5 : 1;
+    },
+    hasMove: function(poke, moveset) {
+        for(var moveIndex = 0; moveIndex < poke.learnset.length; moveIndex++){
+            if(move.name == moveset[moveIndex].name){
+                return moveIndex;
+            }
+        }
+        return -1;
     },
     nthroot: function(x, n){
         try {
