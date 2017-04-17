@@ -134,7 +134,7 @@ var Pokemon = {
             'spdef': 64,
             'speed': 43
         },
-        'types': ['water'],
+        'types': ['water', ''],
         'learnset': {
             '1': attacks.tackle,
             '4': attacks.tailwhip
@@ -150,7 +150,7 @@ var Pokemon = {
             'spdef': 50,
             'speed': 65
         },
-        'types': ['fire'],
+        'types': ['fire', ''],
         'learnset': {
             '1': attacks.tackle,
             '2': attacks.scratch
@@ -166,7 +166,7 @@ var Pokemon = {
             'spdef': 65,
             'speed': 55
         },
-        'types': ['normal'],
+        'types': ['normal', ''],
         'learnset': {
             '1': attacks.scratch,
             '2': attacks.growl
@@ -182,7 +182,7 @@ var Pokemon = {
             'spdef': 40,
             'speed': 90
         },
-        'types': ['electric'],
+        'types': ['electric', ''],
         'learnset': {
             '1': attacks.tackle,
             '5': attacks.growl,
@@ -191,6 +191,7 @@ var Pokemon = {
     }
 };
 var pokedex = ["squirtle", "charmander", "bulbasaur", "pikachu", "eevee"];
+console.log(pokedex);
 
 // This is the intial welcome message
 var welcomeMessage = "Hello, there! Glad to meet you! Welcome to the world of Pokémon! My name is Oak. People affectionately refer to me as the Pokémon Professor. This world… …is inhabited far and wide by creatures called Pokémon! For some people, Pokémon are pets. Other use them for battling. As for myself… I study Pokémon as a profession. But first, tell me a little about yourself. Now tell me. Are you a boy or a girl?";
@@ -798,6 +799,30 @@ var battleOverHandlers = Alexa.CreateStateHandler(states.BATTLEOVERMODE, {
     }
 });
 
+var runAwayHandlers = Alexa.CreateStateHandler(states.RUNAWAYMODE, {
+    
+    'AMAZON.HelpIntent': function () {
+        this.emit(':ask', unhandledGeneral, unhandledGeneral);
+    },
+    'AMAZON.StopIntent': function () {
+        this.emit(':tell', this.attributes['goodbyeMessage']);
+    },
+    'AMAZON.CancelIntent': function () {
+        this.emit(':tell', this.attributes['goodbyeMessage']);
+    },
+    'AMAZON.StartOverIntent': function () {
+        // reset the game state to start mode
+        this.handler.state = states.STARTMODE;
+        this.emit(':ask', welcomeMessage, repeatWelcomeMessage);
+    },
+    'BicycleIntent': function () {
+        this.emit(':ask', bicycleMessage);
+    },
+    'Unhandled': function () {
+        this.emit(':ask', unhandledGeneral, unhandledGeneral);
+    }
+});
+
 
 var askQuestionHandlers = Alexa.CreateStateHandler(states.ASKMODE, {
     
@@ -839,7 +864,7 @@ var helper = {
         return Math.floor(Math.random() * (max-min+1)) + min;
     },
     //name is official name of pokemon, starter is boolean true if pokemon is a starter (level 5) wild is boolean for wild (true) or not (false)
-    generatePokemon: function(name, starter, OT = "wild") {
+    generatePokemon: function(name, starter, OT) {
         var poke = {
             'name': name,
             'OT': OT,
@@ -904,10 +929,10 @@ var helper = {
             party.push(randPoke);
         }
     },
-    battleSetup: function(context, player, opponent, battleType, oppParty = generateParty()) {
+    battleSetup: function(context, player, opponent, battleType, oppParty) {
         context.attributes['battle'] = battleType;
         context.attributes['opponent'] = opponent;
-        context.attributes['oppParty'] = oppParty;
+        context.attributes['oppParty'] = oppParty; //need to generateParty(...) if not defined
     },
     endBattle: function(context, party){
         //don't reset health
