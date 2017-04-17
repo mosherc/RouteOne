@@ -172,8 +172,8 @@ var Pokemon = {
             '2': attacks.growl
         }
     },
-    'pikachu':{
-        'name': 'pikachu',
+    'Pikachū':{
+        'name': 'Pikachū',
         'base':{
             'hp': 35,
             'atk': 55,
@@ -190,7 +190,7 @@ var Pokemon = {
         }
     }
 };
-var pokedex = ["squirtle", "charmander", "bulbasaur", "pikachu", "eevee"];
+var pokedex = ["squirtle", "charmander", "bulbasaur", "Pikachū", "eevee"];
 console.log(pokedex);
 
 // This is the intial welcome message
@@ -249,7 +249,7 @@ var newSessionHandler = {
     this.attributes['movementState'] = 0;
     this.attributes['money'] = 0;
     this.attributes['bag'] = [];
-    this.attributes['Squirtle'] = helper.generatePokemon("squirtle", true, "Stan");
+    this.attributes['party'] = [];
     this.emit(':ask', welcomeMessage, unhandledSex);
   },'AMAZON.HelpIntent': function () {
     this.handler.state = states.STARTMODE;
@@ -257,7 +257,7 @@ var newSessionHandler = {
   },
   'Unhandled': function () {
     this.handler.state = states.STARTMODE;
-    this.emit(':ask', promptToStartMessage, promptToStartMessage);
+    this.emit(':ask', unhandledSex, repeatChooseSex);
   }
 };
 
@@ -270,12 +270,11 @@ var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
         sex = this.event.request.intent.slots.Sex.value;
         this.attributes['sex'] = sex;
         var response = "Let's Begin with your name. What is it?";
-        this.attributes['Squirtle'] = 'undefined';
         // set state to asking name
         this.handler.state = states.NAMEMODE;
 
         // ask the next question
-        this.emit(':ask', response, repeatChooseSex);
+        this.emit(':ask', response, response);
     },
     'AMAZON.NoIntent': function () {
         this.emit(':tell', goodbyeMessage);
@@ -454,15 +453,16 @@ var askPokemonHandlers = Alexa.CreateStateHandler(states.CHOOSEPOKEMONMODE, {
             starter = helper.generatePokemon(starter, true, playerName);
             rivalStarter = helper.generatePokemon(rivalStarter, true, rivalName);
             
+            this.attributes['party'].push(starter);
             helper.battleSetup(this, playerName, rivalName, "first", [rivalStarter]);
             //battleSetup: function(context, player, opponent, battleType, oppParty = generateParty())
             
             this.handler.state = states.BATTLEMODE;
-            this.emit(':ask', playerName + " received the " + starter.name + " from Professor Oak! Your rival walks over to the " + rivalStarter.name + " and says, I'll take this one then! " + rivalName + " received the " + rivalStarter.name + " from Professor Oak! Oak says, if a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town. " + rivalName + " stops you and says, Wait, " + playerName + "! Let's check out our Pokemon! Come on, I'll take you on! ... Rival " + rivalName + " would like to battle! Rival " + rivalName + " sent out " + rivalStarter.name + "! Go! " + starter.name + "! Oak interjects saying, Oh for Pete's sake...So pushy as always. " + rivalName + ". You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. The trainer that makes the other trainer's Pokemon faint by lowering their hp to zero wins. But rather than talking about it, you'll learn more from experience. Try battling and see for yourself. What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.");
+            this.emit(':ask', playerName + " received the " + starter.name + " from Professor Oak! Your rival walks over to the " + rivalStarter.name + " and says, I'll take this one then! " + rivalName + " received the " + rivalStarter.name + " from Professor Oak! Oak says, if a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town. " + rivalName + " stops you and says, Wait, " + playerName + "! Let's check out our Pokemon! Come on, I'll take you on! ... Rival " + rivalName + " would like to battle! Rival " + rivalName + " sent out " + rivalStarter.name + "! Go! " + starter.name + "! Oak interjects saying, Oh for Pete's sake...So pushy as always. " + rivalName + ". You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. The trainer that makes the other trainer's Pokemon faint by lowering their hp to zero wins. But rather than talking about it, you'll learn more from experience. Try battling and see for yourself. What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.", "What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.");
             //<audio src='https://66.90.93.122/ost/pokemon-original-game-soundtrack/zawnfmpnge/105-rival-appears.mp3'/>
         }
         else {
-            this.emit(':ask', "Please choose either Bulbasaur, Squirtle, or Charmander.");
+            this.emit(':ask', "Please choose either Bulbasaur, Squirtle, or Charmander.", "Please choose either Bulbasaur, Squirtle, or Charmander.");
         }
     },
     'AMAZON.NoIntent': function () {
@@ -503,7 +503,7 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLEMODE, {
         
         var poke = this.attributes['party'][0];
         var moves = poke.learnset;
-        var moveString = moves.join(", ");
+        var moveString = moves.map(function(move){return move.name;}).join(", ");
         
         var response = "Your " + poke.name + " knows " + moveString + ". Please select one of these moves by saying 'use move'!";
         
@@ -575,69 +575,71 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLEMODE, {
 var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
     
     'ChooseMoveIntent': function () {
-        var party = this.attributes['party'];
-        var oppParty = this.attributes['oppParty'];
-        var healthyArr;
-        var oppHealthyArr;
-        var poke = party[0];
-        var playerName = this.attributes['playerName'];
-        var opp = oppParty[0];
-        var rivalName = this.attributes['opponent'];
-        var chosenMove = this.event.request.intent.slots.Move.value.replaceAll("\\s", "").toLowerCase();
-        var moveset = poke.learnset;
-        var oppMove = opp.learnset[helper.generateRandomInt(0,3)];
-        var response = "";
-        var pokeDmg; //how much damage TO player poke
-        var oppDmg; //how much damage TO opp poke
-        var crit;
+//        var party = this.attributes['party'];
+//        var oppParty = this.attributes['oppParty'];
+//        var healthyArr;
+//        var oppHealthyArr;
+//        var poke = party[0];
+//        var playerName = this.attributes['playerName'];
+//        var opp = oppParty[0];
+//        var rivalName = this.attributes['opponent'];
+//        var chosenMove = this.event.request.intent.slots.Move.value.replaceAll("\\s", "").toLowerCase();
+//        var moveset = poke.learnset;
+//        var oppMove = opp.learnset[helper.generateRandomInt(0,opp.learnset.length-1)];
+//        var response = "";
+//        var pokeDmg; //how much damage TO player poke
+//        var oppDmg; //how much damage TO opp poke
+//        var crit;
+        
+        this.emit(':ask', "hello", "hello");
         
         //Need to check if player must use struggle because out of PP on all moves
-        
-        if(moveset.indexOf(chosenMove) > -1){
-            //move is in moveset
-            var move = moveset[chosenMove];
-            
-            if(move.pp > 0){
-                var playerFirst = function() {
-                    response += helper.attack(poke, opp, move);
-                    var faintRes = helper.isFainted(this, opp, false);
-                    response += faintRes.response;
-                    if(!faintRes.fainted){
-                        response += helper.attack(opp, poke, oppMove);
-                        response += helper.isFainted(this, poke, true).response;
-                    }
-                };
-                var playerSecond = function() {
-                    response += helper.attack(opp, poke, oppMove);
-                    var faintRes = helper.isFainted(this, poke, false);
-                    response += faintRes.response;
-                    if(!faintRes.fainted){
-                        response += helper.attack(poke, opp, move);
-                        response += helper.isFainted(this, opp, true).response;
-                    }
-                };
-                
-                //need to see who is faster
-                if(poke.speed > opp.speed) {
-                    playerFirst();
-                } else if(poke.speed < opp.speed) {
-                    playerSecond();
-                } else if(Math.random() < 0.5) {
-                    //randomly choose who goes first
-                    playerFirst();
-                } else {
-                    playerSecond();
-                }
-            } else {
-                //move is out of PP
-                response += "That move is out of PP, please select a different move.";
-            }
-            this.emit(':ask', response, response);
-        } else {
-            //move is not in moveset
-            response = "That is not an available move. Please choose a different move.";
-            this.emit(':ask', response, response);
-        }
+//        console.log(moveset.indexOf(chosenMove));
+//        if(moveset.indexOf(chosenMove) > -1){
+//            //move is in moveset
+//            var move = moveset[chosenMove];
+//            
+//            if(move.pp > 0){
+//                var playerFirst = function() {
+//                    response += helper.attack(poke, opp, move);
+//                    var faintRes = helper.isFainted(this, opp, false);
+//                    response += faintRes.response;
+//                    if(!faintRes.fainted){
+//                        response += helper.attack(opp, poke, oppMove);
+//                        response += helper.isFainted(this, poke, true).response;
+//                    }
+//                };
+//                var playerSecond = function() {
+//                    response += helper.attack(opp, poke, oppMove);
+//                    var faintRes = helper.isFainted(this, poke, false);
+//                    response += faintRes.response;
+//                    if(!faintRes.fainted){
+//                        response += helper.attack(poke, opp, move);
+//                        response += helper.isFainted(this, opp, true).response;
+//                    }
+//                };
+//                
+//                //need to see who is faster
+//                if(poke.speed > opp.speed) {
+//                    playerFirst();
+//                } else if(poke.speed < opp.speed) {
+//                    playerSecond();
+//                } else if(Math.random() < 0.5) {
+//                    //randomly choose who goes first
+//                    playerFirst();
+//                } else {
+//                    playerSecond();
+//                }
+//            } else {
+//                //move is out of PP
+//                response += "That move is out of PP, please select a different move.";
+//            }
+//            this.emit(':ask', response, response);
+//        } else {
+//            //move is not in moveset
+//            response = "That is not an available move. Please choose a different move.";
+//            this.emit(':ask', response, response);
+//        }
     },
     'AMAZON.HelpIntent': function () {
         this.emit(':ask', unhandledGeneral, unhandledGeneral);
@@ -657,6 +659,7 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
         this.emit(':ask', bicycleMessage);
     },
     'Unhandled': function () {
+        console.log("hello");
         this.emit(':ask', unhandledGeneral, unhandledGeneral);
     }
 });
@@ -890,11 +893,10 @@ var helper = {
             },
             'EVs': 0,
         }
-        if(starter) {
-            poke.level = 5;
-        } else {
-            poke.level = helper.generateRandomInt(Math.max(this.attributes['movementState']*2/3-2, 1), Math.min(this.attributes['movementState']*2/3+2, 100));
-        }
+        poke.level = starter ? 5 : helper.generateRandomInt(Math.max(this.attributes['movementState']*2/3-2, 1), Math.min(this.attributes['movementState']*2/3+2, 100));
+        
+        poke.exp = Math.pow(poke.level, 3);
+        poke.hp = Math.floor((2*Pokemon[name].base.hp+poke.IVs.hp+Math.floor(poke.EVs/4))*poke.level/100)+poke.level+10;
         
         poke.learnset = [];
         for(move in Pokemon[name].learnset){
@@ -906,10 +908,9 @@ var helper = {
             poke.learnset = helper.getRandomSubarray(poke.learnset, 4);
         }
         
-        poke.exp = Math.pow(poke.level, 3);
-        poke.hp = Math.floor((2*Pokemon[name].base.hp+poke.IVs.hp+Math.floor(poke.EVs/4))/100)+poke.level+10;
+        
         function returnStat(stat) {
-            stat = Math.floor((Math.floor((2*Pokemon[name].base[stat]+poke.IVs[stat]+Math.floor(poke.EVs/4))*poke.level)/100)+5);
+            stat = Math.floor(Math.floor((2*Pokemon[name].base[stat]+poke.IVs[stat]+Math.floor(poke.EVs/4))*poke.level/100)+5);
             return stat;
         }
         poke.stats.spdef = returnStat('spdef');
@@ -917,7 +918,6 @@ var helper = {
         poke.stats.def = returnStat('def');
         poke.stats.atk = returnStat('atk');
         poke.stats.speed = returnStat('speed');
-        poke.stats.hp = returnStat('hp');
         
         return poke;
     },
@@ -962,7 +962,7 @@ var helper = {
         })
     },
     heal: function(poke) {
-        poke.hp = Math.floor((2*Pokemon[poke.name].base.hp+poke.IVs.hp+Math.floor(poke.EVs/4))/100)+poke.level+10;
+        poke.hp = Math.floor((2*Pokemon[poke.name].base.hp+poke.IVs.hp+Math.floor(poke.EVs/4))*poke.level/100)+poke.level+10;
         poke.learnset.forEach(function(move) {
             move.pp = attacks[move.name].pp;
         })
@@ -1000,7 +1000,7 @@ var helper = {
     resetStats: function(poke) {
         poke.hp = Math.floor((2*Pokemon[poke.name].base.hp+poke.IVs.hp+Math.floor(poke.EVs/4))/100)+poke.level+10;
         function returnStat(stat) {
-            stat = Math.floor((Math.floor((2*Pokemon[poke.name].base[stat]+poke.IVs[stat]+Math.floor(poke.EVs/4))*poke.level)/100)+5);
+            stat = Math.floor(Math.floor((2*Pokemon[poke.name].base[stat]+poke.IVs[stat]+Math.floor(poke.EVs/4))*poke.level/100)+5);
             return stat;
         }
         poke.stats.spdef = returnStat('spdef');
@@ -1008,7 +1008,6 @@ var helper = {
         poke.stats.def = returnStat('def');
         poke.stats.atk = returnStat('atk');
         poke.stats.speed = returnStat('speed');
-        poke.stats.hp = returnStat('hp');
         
         for(var mod in poke.modifiers) {
             modifiers[mod] = 0;
