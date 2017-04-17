@@ -11,7 +11,7 @@ var states = {
     MOVEMENTMODE: '_MOVEMENTMODE',
     CHOOSEPOKEMONMODE: '_CHOOSEPOKEMONMODE',
     BATTLEMODE: '_BATTLEMODE',
-    CHOSEMOVEMODE: '_CHOOSEMOVEMODE',
+    CHOOSEMOVEMODE: '_CHOOSEMOVEMODE',
     SWITCHPOKEMODE: '_SWITCHPOKEMODE',
     BAGMODE: '_BAGMODE',
     WHITEOUTMODE: '_WHITEOUTMODE',
@@ -453,7 +453,7 @@ var askPokemonHandlers = Alexa.CreateStateHandler(states.CHOOSEPOKEMONMODE, {
             starter = helper.generatePokemon(starter, true, playerName);
             rivalStarter = helper.generatePokemon(rivalStarter, true, rivalName);
             
-            this.attributes['party'].push(starter);
+            this.attributes['party'] = [starter];
             helper.battleSetup(this, playerName, rivalName, "first", [rivalStarter]);
             //battleSetup: function(context, player, opponent, battleType, oppParty = generateParty())
             
@@ -507,7 +507,7 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLEMODE, {
         
         var response = "Your " + poke.name + " knows " + moveString + ". Please select one of these moves by saying 'use move'!";
         
-        this.handler.state = states.CHOSEMOVEMODE;
+        this.handler.state = states.CHOOSEMOVEMODE;
         this.emit(':ask', response, response);
         
     },
@@ -575,71 +575,71 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLEMODE, {
 var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
     
     'ChooseMoveIntent': function () {
-//        var party = this.attributes['party'];
-//        var oppParty = this.attributes['oppParty'];
-//        var healthyArr;
-//        var oppHealthyArr;
-//        var poke = party[0];
-//        var playerName = this.attributes['playerName'];
-//        var opp = oppParty[0];
-//        var rivalName = this.attributes['opponent'];
-//        var chosenMove = this.event.request.intent.slots.Move.value.replaceAll("\\s", "").toLowerCase();
-//        var moveset = poke.learnset;
-//        var oppMove = opp.learnset[helper.generateRandomInt(0,opp.learnset.length-1)];
-//        var response = "";
-//        var pokeDmg; //how much damage TO player poke
-//        var oppDmg; //how much damage TO opp poke
-//        var crit;
+        var party = this.attributes['party'];
+        var oppParty = this.attributes['oppParty'];
+        var healthyArr;
+        var oppHealthyArr;
+        var poke = party[0];
+        var playerName = this.attributes['playerName'];
+        var opp = oppParty[0];
+        var rivalName = this.attributes['opponent'];
+        var chosenMove = this.event.request.intent.slots.Move.value.replaceAll("\\s", "").toLowerCase();
+        var moveset = poke.learnset;
+        var oppMove = opp.learnset[helper.generateRandomInt(0,opp.learnset.length-1)];
+        var response = "";
+        var pokeDmg; //how much damage TO player poke
+        var oppDmg; //how much damage TO opp poke
+        var crit;
         
-        this.emit(':ask', "hello", "hello");
+        
         
         //Need to check if player must use struggle because out of PP on all moves
-//        console.log(moveset.indexOf(chosenMove));
-//        if(moveset.indexOf(chosenMove) > -1){
-//            //move is in moveset
-//            var move = moveset[chosenMove];
-//            
-//            if(move.pp > 0){
-//                var playerFirst = function() {
-//                    response += helper.attack(poke, opp, move);
-//                    var faintRes = helper.isFainted(this, opp, false);
-//                    response += faintRes.response;
-//                    if(!faintRes.fainted){
-//                        response += helper.attack(opp, poke, oppMove);
-//                        response += helper.isFainted(this, poke, true).response;
-//                    }
-//                };
-//                var playerSecond = function() {
-//                    response += helper.attack(opp, poke, oppMove);
-//                    var faintRes = helper.isFainted(this, poke, false);
-//                    response += faintRes.response;
-//                    if(!faintRes.fainted){
-//                        response += helper.attack(poke, opp, move);
-//                        response += helper.isFainted(this, opp, true).response;
-//                    }
-//                };
-//                
-//                //need to see who is faster
-//                if(poke.speed > opp.speed) {
-//                    playerFirst();
-//                } else if(poke.speed < opp.speed) {
-//                    playerSecond();
-//                } else if(Math.random() < 0.5) {
-//                    //randomly choose who goes first
-//                    playerFirst();
-//                } else {
-//                    playerSecond();
-//                }
-//            } else {
-//                //move is out of PP
-//                response += "That move is out of PP, please select a different move.";
-//            }
-//            this.emit(':ask', response, response);
-//        } else {
-//            //move is not in moveset
-//            response = "That is not an available move. Please choose a different move.";
-//            this.emit(':ask', response, response);
-//        }
+        console.log(moveset.indexOf(chosenMove));
+        if(moveset.indexOf(chosenMove) > -1){
+            //move is in moveset
+            var move = moveset[chosenMove];
+            
+            if(move.pp > 0){
+                var playerFirst = function() {
+                    response += helper.attack(poke, opp, move);
+                    var faintRes = helper.isFainted(this, opp, false);
+                    response += faintRes.response;
+                    if(!faintRes.fainted){
+                        response += helper.attack(opp, poke, oppMove);
+                        response += helper.isFainted(this, poke, true).response;
+                    }
+                };
+                var playerSecond = function() {
+                    response += helper.attack(opp, poke, oppMove);
+                    var faintRes = helper.isFainted(this, poke, false);
+                    response += faintRes.response;
+                    if(!faintRes.fainted){
+                        response += helper.attack(poke, opp, move);
+                        response += helper.isFainted(this, opp, true).response;
+                    }
+                };
+                
+                //need to see who is faster
+                if(poke.speed > opp.speed) {
+                    playerFirst();
+                } else if(poke.speed < opp.speed) {
+                    playerSecond();
+                } else if(Math.random() < 0.5) {
+                    //randomly choose who goes first
+                    playerFirst();
+                } else {
+                    playerSecond();
+                }
+            } else {
+                //move is out of PP
+                response += "That move is out of PP, please select a different move.";
+            }
+            this.emit(':ask', response, response);
+        } else {
+            //move is not in moveset
+            response = "That is not an available move. Please choose a different move.";
+            this.emit(':ask', response, response);
+        }
     },
     'AMAZON.HelpIntent': function () {
         this.emit(':ask', unhandledGeneral, unhandledGeneral);
