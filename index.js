@@ -592,7 +592,11 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
         var oppDmg; //how much damage TO opp poke
         var crit;
         
-        
+        this.attributes['chosenMove'] = {
+            move: chosenMove,
+            inMoveSet: moveset.indexOf(chosenMove)
+        };
+        //issue with indexOf
         
         //Need to check if player must use struggle because out of PP on all moves
         console.log(moveset.indexOf(chosenMove));
