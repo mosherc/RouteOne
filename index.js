@@ -87,23 +87,23 @@ var modifiers = {
     '6': 3
 };
 var typeChart = {
-    normal   : {Normal: 1,   Fighting:1,	 Flying:1,	Poison:1,	Ground:1,	Rock:0.5, 	Bug:1,    Ghost:0,    Steel:0.5,    Fire:1,	   Water:1,	 Grass:1,	Electric:1,	  Psychic:1,	Ice:1,	  Dragon:1,	  Dark:1},
-    fight    : {Normal: 2,   Fighting:1,	 Flying:0.5,Poison:0.5,	Ground:1,	Rock:2, 	Bug:0.5,  Ghost:0,    Steel:2,      Fire:1,	   Water:1,	 Grass:1,	Electric:1,	  Psychic:0.5,	Ice:2,	  Dragon:1,	  Dark:1},
-    flying   : {Normal: 1,   Fighting:2,	 Flying:1,	Poison:1,	Ground:1,	Rock:0.5, 	Bug:2,    Ghost:1,    Steel:0.5,    Fire:1,	   Water:1,	 Grass:2,	Electric:0.5, Psychic:1,	Ice:1,	  Dragon:1,	  Dark:1},
-    poison   : {Normal: 1,   Fighting:1,	 Flying:1,	Poison:0.5,	Ground:0.5,	Rock:0.5, 	Bug:1,    Ghost:0.5,  Steel:0,      Fire:1,	   Water:1,	 Grass:2,	Electric:1,	  Psychic:1,	Ice:1,	  Dragon:1,	  Dark:1},
-    ground   : {Normal: 1,   Fighting:1,	 Flying:0,	Poison:2,	Ground:1,	Rock:2, 	Bug:0.5,  Ghost:1,    Steel:2,      Fire:2,	   Water:1,	 Grass:0.5,	Electric:2,	  Psychic:1,	Ice:1,	  Dragon:1,	  Dark:1},
-    rock     : {Normal: 1,   Fighting:0.5,	 Flying:2,	Poison:1,	Ground:0.5,	Rock:1, 	Bug:2,    Ghost:1,    Steel:0.5,    Fire:2,	   Water:1,	 Grass:1,	Electric:1,	  Psychic:1,	Ice:2,	  Dragon:1,	  Dark:1},
-    bug      : {Normal: 1,   Fighting:0.5,	 Flying:0.5,Poison:0.5,	Ground:1,	Rock:1, 	Bug:1,    Ghost:0.5,  Steel:0.5,    Fire:0.5,  Water:1,	 Grass:2,	Electric:1,	  Psychic:2,	Ice:1,	  Dragon:1,	  Dark:1},
-    ghost    : {Normal: 0,   Fighting:1,	 Flying:1,	Poison:1,	Ground:1,	Rock:1, 	Bug:1,    Ghost:2,    Steel:0.5,    Fire:1,	   Water:1,	 Grass:1,	Electric:1,	  Psychic:2,	Ice:1,	  Dragon:1,	  Dark:1},
-    steel    : {Normal: 1,   Fighting:1,	 Flying:1,	Poison:1,	Ground:1,	Rock:2, 	Bug:1,    Ghost:1,    Steel:0.5,    Fire:0.5,  Water:0.5,Grass:1,	Electric:0.5, Psychic:1,	Ice:2,	  Dragon:1,	  Dark:1},
-    fire     : {Normal: 1,   Fighting:1,	 Flying:1,	Poison:1,	Ground:1,	Rock:0.5, 	Bug:2,    Ghost:1,    Steel:2,      Fire:0.5,  Water:0.5,Grass:2,	Electric:1,	  Psychic:1,	Ice:2,	  Dragon:0.5, Dark:1},
-    water    : {Normal: 1,   Fighting:1,	 Flying:1,	Poison:1,	Ground:2,	Rock:2, 	Bug:1,    Ghost:1,    Steel:1,      Fire:2,	   Water:0.5,Grass:0.5,	Electric:1,	  Psychic:1,	Ice:1,	  Dragon:0.5, Dark:1},
-    grass    : {Normal: 1,   Fighting:1,	 Flying:0.5,Poison:0.5,	Ground:2,	Rock:2, 	Bug:0.5,  Ghost:1,    Steel:0.5,    Fire:0.5,  Water:2,	 Grass:0.5,	Electric:1,	  Psychic:1,	Ice:1,	  Dragon:0.5, Dark:1},
-    electric : {Normal: 1,   Fighting:1,	 Flying:2,	Poison:1,	Ground:0,	Rock:1, 	Bug:1,    Ghost:1,    Steel:1,      Fire:1,	   Water:2,	 Grass:0.5,	Electric:0.5, Psychic:1,	Ice:1,	  Dragon:0.5, Dark:1},
-    psychic  : {Normal: 1,   Fighting:2,	 Flying:1,	Poison:2,	Ground:1,	Rock:1, 	Bug:1,    Ghost:1,    Steel:0.5,    Fire:1,	   Water:1,	 Grass:1,	Electric:1,	  Psychic:0.5,	Ice:1,	  Dragon:1,	  Dark:1},
-    ice      : {Normal: 1,   Fighting:1,	 Flying:2,	Poison:1,	Ground:2,	Rock:1, 	Bug:1,    Ghost:1,    Steel:0.5,    Fire:0.5,  Water:0.5,Grass:2,	Electric:1,	  Psychic:1,	Ice:0.5,  Dragon:2,	  Dark:1},
-    dragon   : {Normal: 1,   Fighting:1,	 Flying:1,	Poison:1,	Ground:1,	Rock:1, 	Bug:1,    Ghost:1,    Steel:0.5,    Fire:1,	   Water:1,	 Grass:1,	Electric:1,	  Psychic:1,	Ice:1,	  Dragon:2,	  Dark:1},
-    dark     : {Normal: 1,   Fighting:0.5,	 Flying:1,	Poison:1,	Ground:1,	Rock:1, 	Bug:1,    Ghost:2,    Steel:0.5,    Fire:1,	   Water:1,	 Grass:1,	Electric:1,	  Psychic:2,	Ice:1,	  Dragon:1,	  Dark:1}
+    normal   : {normal: 1,   fighting:1,	 flying:1,	poison:1,	ground:1,	rock:0.5, 	bug:1,    ghost:0,    steel:0.5,    fire:1,	   water:1,	 grass:1,	electric:1,	  psychic:1,	ice:1,	  dragon:1,	  dark:1},
+    fight    : {normal: 2,   fighting:1,	 flying:0.5,poison:0.5,	ground:1,	rock:2, 	bug:0.5,  ghost:0,    steel:2,      fire:1,	   water:1,	 grass:1,	electric:1,	  psychic:0.5,	ice:2,	  dragon:1,	  dark:1},
+    flying   : {normal: 1,   fighting:2,	 flying:1,	poison:1,	ground:1,	rock:0.5, 	bug:2,    ghost:1,    steel:0.5,    fire:1,	   water:1,	 grass:2,	electric:0.5, psychic:1,	ice:1,	  dragon:1,	  dark:1},
+    poison   : {normal: 1,   fighting:1,	 flying:1,	poison:0.5,	ground:0.5,	rock:0.5, 	bug:1,    ghost:0.5,  steel:0,      fire:1,	   water:1,	 grass:2,	electric:1,	  psychic:1,	ice:1,	  dragon:1,	  dark:1},
+    ground   : {normal: 1,   fighting:1,	 flying:0,	poison:2,	ground:1,	rock:2, 	bug:0.5,  ghost:1,    steel:2,      fire:2,	   water:1,	 grass:0.5,	electric:2,	  psychic:1,	ice:1,	  dragon:1,	  dark:1},
+    rock     : {normal: 1,   fighting:0.5,	 flying:2,	poison:1,	ground:0.5,	rock:1, 	bug:2,    ghost:1,    steel:0.5,    fire:2,	   water:1,	 grass:1,	electric:1,	  psychic:1,	ice:2,	  dragon:1,	  dark:1},
+    bug      : {normal: 1,   fighting:0.5,	 flying:0.5,poison:0.5,	ground:1,	rock:1, 	bug:1,    ghost:0.5,  steel:0.5,    fire:0.5,  water:1,	 grass:2,	electric:1,	  psychic:2,	ice:1,	  dragon:1,	  dark:1},
+    ghost    : {normal: 0,   fighting:1,	 flying:1,	poison:1,	ground:1,	rock:1, 	bug:1,    ghost:2,    steel:0.5,    fire:1,	   water:1,	 grass:1,	electric:1,	  psychic:2,	ice:1,	  dragon:1,	  dark:1},
+    steel    : {normal: 1,   fighting:1,	 flying:1,	poison:1,	ground:1,	rock:2, 	bug:1,    ghost:1,    steel:0.5,    fire:0.5,  water:0.5,grass:1,	electric:0.5, psychic:1,	ice:2,	  dragon:1,	  dark:1},
+    fire     : {normal: 1,   fighting:1,	 flying:1,	poison:1,	ground:1,	rock:0.5, 	bug:2,    ghost:1,    steel:2,      fire:0.5,  water:0.5,grass:2,	electric:1,	  psychic:1,	ice:2,	  dragon:0.5, dark:1},
+    water    : {normal: 1,   fighting:1,	 flying:1,	poison:1,	ground:2,	rock:2, 	bug:1,    ghost:1,    steel:1,      fire:2,	   water:0.5,grass:0.5,	electric:1,	  psychic:1,	ice:1,	  dragon:0.5, dark:1},
+    grass    : {normal: 1,   fighting:1,	 flying:0.5,poison:0.5,	ground:2,	rock:2, 	bug:0.5,  ghost:1,    steel:0.5,    fire:0.5,  water:2,	 grass:0.5,	electric:1,	  psychic:1,	ice:1,	  dragon:0.5, dark:1},
+    electric : {normal: 1,   fighting:1,	 flying:2,	poison:1,	ground:0,	rock:1, 	bug:1,    ghost:1,    steel:1,      fire:1,	   water:2,	 grass:0.5,	electric:0.5, psychic:1,	ice:1,	  dragon:0.5, dark:1},
+    psychic  : {normal: 1,   fighting:2,	 flying:1,	poison:2,	ground:1,	rock:1, 	bug:1,    ghost:1,    steel:0.5,    fire:1,	   water:1,	 grass:1,	electric:1,	  psychic:0.5,	ice:1,	  dragon:1,	  dark:1},
+    ice      : {normal: 1,   fighting:1,	 flying:2,	poison:1,	ground:2,	rock:1, 	bug:1,    ghost:1,    steel:0.5,    fire:0.5,  water:0.5,grass:2,	electric:1,	  psychic:1,	ice:0.5,  dragon:2,	  dark:1},
+    dragon   : {normal: 1,   fighting:1,	 flying:1,	poison:1,	ground:1,	rock:1, 	bug:1,    ghost:1,    steel:0.5,    fire:1,	   water:1,	 grass:1,	electric:1,	  psychic:1,	ice:1,	  dragon:2,	  dark:1},
+    dark     : {normal: 1,   fighting:0.5,	 flying:1,	poison:1,	ground:1,	rock:1, 	bug:1,    ghost:2,    steel:0.5,    fire:1,	   water:1,	 grass:1,	electric:1,	  psychic:2,	ice:1,	  dragon:1,	  dark:1}
 };
 
 //Pokemon constants only
@@ -412,19 +412,19 @@ var askPokemonHandlers = Alexa.CreateStateHandler(states.CHOOSEPOKEMONMODE, {
         var response;
         
         if(starter == "bulbasaur") {
-            response = "I see! Bulbasaur is your choice. It's very easy to raise. So, " + playerName + ", you want to go with the Grass Pokemon Bulbasaur?";
+            response = "I see! Bulbasaur is your choice. It's very easy to raise. So, " + playerName + ", you want to go with the grass Pokemon Bulbasaur?";
             this.attributes['starter'] = starter;
         }
         else if(starter == "charmander") {
-            response = "Ah! Charmander is your choice. You should raise it patiently. So, " + playerName + ", you're claiming the Fire Pokemon Charmander?";
+            response = "Ah! Charmander is your choice. You should raise it patiently. So, " + playerName + ", you're claiming the fire Pokemon Charmander?";
             this.attributes['starter'] = starter;
         }
         else if(starter == "squirtle") {
-            response = "Hm! Squirtle is your choice. It's one worth raising. So, " + playerName + ", you've decided on the Water Pokemon Squirtle?";
+            response = "Hm! Squirtle is your choice. It's one worth raising. So, " + playerName + ", you've decided on the water Pokemon Squirtle?";
             this.attributes['starter'] = starter;
         }
         else if(starter == "Pikachū") {
-            response = "Oh! It's name is Pikachu. It's also known as the Electric Mouse. It's usually shy, but can sometimes have an electrifying personality. Shocking isn't it? So, " + playerName + ", do you want to be the very best, like no one ever was?";
+            response = "Oh! It's name is Pikachu. It's also known as the electric Mouse. It's usually shy, but can sometimes have an electrifying personality. Shocking isn't it? So, " + playerName + ", do you want to be the very best, like no one ever was?";
             this.attributes['starter'] = starter;
         } else {
             this.emit(':ask', unhandledPokemon, unhandledPokemon);
@@ -593,12 +593,6 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
         var moveIndex;
         var state = this.handler.state;
         
-        this.attributes['chosenMove'] = {
-            move: chosenMove,
-            inMoveSet: moveset.indexOf(chosenMove)
-        };
-        //issue with indexOf
-        
         //Need to check if player must use struggle because out of PP on all moves
         moveIndex = helper.hasMove(poke, chosenMove, moveset);
         if(moveIndex > -1){
@@ -609,11 +603,11 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
                 var playerFirst = function() {
                     response += helper.attack(poke, opp, move);
                     //isFainted: function(playerName, oppName, party, oppParty, poke, second) {
-                    var faintRes = helper.isFainted(oppName, playerName, oppParty, party, opp, true, state);
+                    var faintRes = helper.isFainted(oppName, playerName, oppParty, party, opp, false, state);
                     response += faintRes.response;
                     if(!faintRes.fainted){
                         response += helper.attack(opp, poke, oppMove);
-                        response += helper.isFainted(playerName, oppName, party, oppParty, poke, false, state).response;
+                        response += helper.isFainted(playerName, oppName, party, oppParty, poke, true, state).response;
                     }
                 };
                 var playerSecond = function() {
@@ -899,6 +893,7 @@ var helper = {
             },
             'EVs': 0,
         }
+        
         poke.level = starter ? 5 : helper.generateRandomInt(Math.max(this.attributes['movementState']*2/3-2, 1), Math.min(this.attributes['movementState']*2/3+2, 100));
         
         poke.exp = Math.pow(poke.level, 3);
@@ -979,21 +974,20 @@ var helper = {
         var damage;
         var crit;
         var acc;
-        response += poke.OT + " used " + move + "! ";
-        console.log(move);
+        response += poke.OT + "'s " + poke.name + " used " + move.name + "! ";
+        console.log("using move: " + move.name);
         if(move.cat == "physical" || move.cat == "special"){
             crit = helper.calcCrit();
             damage = helper.calcDamage(poke, opp, move, crit);
             if(damage > -1){
                 response += (crit == 2 && helper.calcEffectivity(move, opp) > 0) ? "A critical hit! " : "";
                 response += helper.getEffectivity(helper.calcEffectivity(move, opp));
-                response += poke.OT + "'s " + poke.name + " did " + damage + " to " + opp.OT + "'s " + opp.name + ". ";
+                response += poke.OT + "'s " + poke.name + " did " + damage + " HP of damage to " + opp.OT + "'s " + opp.name + ". ";
             } else {
                 //attack missed
                 response += poke.name + "'s attack missed! ";
             }
         } else {
-            console.log("why am I here?");
             response += helper.calcStatusEffect(poke, opp, move);
         }
         for(var moveIndex = 0; moveIndex < poke.learnset.length; moveIndex++){
@@ -1040,7 +1034,9 @@ var helper = {
     calcEffectivity: function(move, opp){
         var mult = 1;
         opp.types.forEach(function(type){
-            mult *= typeChart[move.type, type];
+            if(type != ""){
+                mult *= typeChart[move.type][type];
+            }
         });
         return mult;
     },
@@ -1074,11 +1070,12 @@ var helper = {
         var modifier = crit * helper.calcRandDamage() * helper.calcSTAB(poke, move) * helper.calcEffectivity(move, opp);
         //I should be able to say if it is critical!
         if(move.cat != "status"){
-            if(Math.random()*100 < move.acc){
+            var rand = Math.random()*100;
+            if(rand < move.acc){
                 //move hits
                 var atk = move.cat == "physical" ? poke.stats.atk : poke.stats.spatk;
                 var def = move.cat == "physical" ? opp.stats.def : opp.stats.spdef;
-                var damage = ((2*poke.level/5+2)*move.damage*atk/def*(1/50)+2) * modifier;
+                var damage = Math.floor(((2*poke.level/5+2)*move.power*atk/def*(1/50)+2) * modifier);
                 opp.hp -= Math.max(1, damage);
                 return Math.max(1, damage);
             } else {
@@ -1170,7 +1167,6 @@ var helper = {
         return {'fainted': fainted, 'response': response};
     },
     calcStatusEffect: function(poke, opp, move) {
-        console.log(move.modifier);
         if (typeof Object.keys(move.modifier) !== 'undefined' && Object.keys(move.modifier).length > 0) {
             var stat = Object.keys(move.modifier)[1];
         }
@@ -1234,9 +1230,6 @@ var helper = {
         return healthyArr;
     },
     calcSTAB: function(poke, move) {
-        console.log(poke);
-        console.log(poke.types);
-        console.log(poke.types[0]);
         return (move.type == poke.types[0] || move.type == poke.types[1]) ? 1.5 : 1;
     },
     hasMove: function(poke, chosenMove, moveset) {
