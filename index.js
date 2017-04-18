@@ -591,45 +591,95 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
         var oppDmg; //how much damage TO opp poke
         var crit;
         var moveIndex;
-        var state = this.handler.state;
+        //var state = this.handler.state;
         
+        console.log("here " + this.handler.state);
+        console.log(this.handler);
         //Need to check if player must use struggle because out of PP on all moves
         moveIndex = helper.hasMove(poke, chosenMove, moveset);
         if(moveIndex > -1){
             //move is in moveset
             var move = moveset[moveIndex];
-            
+            console.log("here 2 " + this.handler.state);
             if(move.pp > 0){
-                var playerFirst = function() {
-                    response += helper.attack(poke, opp, move);
-                    //isFainted: function(playerName, oppName, party, oppParty, poke, second) {
-                    var faintRes = helper.isFainted(oppName, playerName, oppParty, party, opp, false, state);
-                    response += faintRes.response;
-                    if(!faintRes.fainted){
-                        response += helper.attack(opp, poke, oppMove);
-                        response += helper.isFainted(playerName, oppName, party, oppParty, poke, true, state).response;
-                    }
-                };
-                var playerSecond = function() {
-                    response += helper.attack(opp, poke, oppMove);
-                    var faintRes = helper.isFainted(playerName, oppName, party, oppParty, poke, false, state);
-                    response += faintRes.response;
-                    if(!faintRes.fainted){
-                        response += helper.attack(poke, opp, move);
-                        response += helper.isFainted(oppName, playerName, oppParty, party, opp, true, state).response;
-                    }
-                };
+//                var playerFirst = function() {
+//                    response += helper.attack(poke, opp, move);
+//                    var faintRes = helper.isFainted(oppName, playerName, oppParty, party, opp, false);
+//                    response += faintRes.response;
+//                    this.handler.state = faintRes.state;
+//                    if(!faintRes.fainted){
+//                        response += helper.attack(opp, poke, oppMove);
+//                        faintRes = helper.isFainted(playerName, oppName, party, oppParty, poke, true);
+//                        this.handler.state = faintRes.state;
+//                        response += faintRes.response;
+//                    }
+//                };
+//                var playerSecond = function() {
+//                    response += helper.attack(opp, poke, oppMove);
+//                    console.log("here 4 " + this.handler.state);
+//                    var faintRes = helper.isFainted(playerName, oppName, party, oppParty, poke, false);
+//                    response += faintRes.response;
+//                    this.handler.state = faintRes.state;
+//                    if(!faintRes.fainted){
+//                        response += helper.attack(poke, opp, move);
+//                        faintRes = helper.isFainted(oppName, playerName, oppParty, party, opp, true);
+//                        this.handler.state = faintRes.state;
+//                        response += faintRes.response;
+//                    }
+//                };
                 
                 //need to see who is faster
                 if(poke.speed > opp.speed) {
-                    playerFirst();
+                    //playerFirst();
+                    response += helper.attack(poke, opp, move);
+                    var faintRes = helper.isFainted(oppName, playerName, oppParty, party, opp, false);
+                    response += faintRes.response;
+                    this.handler.state = faintRes.state;
+                    if(!faintRes.fainted){
+                        response += helper.attack(opp, poke, oppMove);
+                        faintRes = helper.isFainted(playerName, oppName, party, oppParty, poke, true);
+                        this.handler.state = faintRes.state;
+                        response += faintRes.response;
+                    }
                 } else if(poke.speed < opp.speed) {
-                    playerSecond();
+                    //playerSecond();
+                    response += helper.attack(opp, poke, oppMove);
+                    console.log("here 4 " + this.handler.state);
+                    var faintRes = helper.isFainted(playerName, oppName, party, oppParty, poke, false);
+                    response += faintRes.response;
+                    this.handler.state = faintRes.state;
+                    if(!faintRes.fainted){
+                        response += helper.attack(poke, opp, move);
+                        faintRes = helper.isFainted(oppName, playerName, oppParty, party, opp, true);
+                        this.handler.state = faintRes.state;
+                        response += faintRes.response;
+                    }
                 } else if(Math.random() < 0.5) {
                     //randomly choose who goes first
-                    playerFirst();
+                    //playerFirst();
+                    response += helper.attack(poke, opp, move);
+                    var faintRes = helper.isFainted(oppName, playerName, oppParty, party, opp, false);
+                    response += faintRes.response;
+                    this.handler.state = faintRes.state;
+                    if(!faintRes.fainted){
+                        response += helper.attack(opp, poke, oppMove);
+                        faintRes = helper.isFainted(playerName, oppName, party, oppParty, poke, true);
+                        this.handler.state = faintRes.state;
+                        response += faintRes.response;
+                    }
                 } else {
-                    playerSecond();
+                    //playerSecond();
+                    response += helper.attack(opp, poke, oppMove);
+                    console.log("here 4 " + this.handler.state);
+                    var faintRes = helper.isFainted(playerName, oppName, party, oppParty, poke, false);
+                    response += faintRes.response;
+                    this.handler.state = faintRes.state;
+                    if(!faintRes.fainted){
+                        response += helper.attack(poke, opp, move);
+                        faintRes = helper.isFainted(oppName, playerName, oppParty, party, opp, true);
+                        this.handler.state = faintRes.state;
+                        response += faintRes.response;
+                    }
                 }
             } else {
                 //move is out of PP
@@ -1086,7 +1136,7 @@ var helper = {
         
     },
     //checks to see if POKE has fainted, playerName owns it
-    isFainted: function(playerName, oppName, party, oppParty, poke, second, state) {
+    isFainted: function(playerName, oppName, party, oppParty, poke, second) {
         var response = ""; 
         var healthyArr;
         var playerPoke = party[0];
@@ -1094,6 +1144,7 @@ var helper = {
         var explvl;
         var money;
         var fainted = false;
+        var state;
         
         if(poke.hp <= 0){
             fainted = true;
@@ -1164,7 +1215,7 @@ var helper = {
             response += second ? "What would you like to do next? Please say fight or attack, switch Pokemon, open bag, or run away." : "";
             state = states.BATTLEMODE;
         }
-        return {'fainted': fainted, 'response': response};
+        return {'fainted': fainted, 'response': response, 'state': state};
     },
     calcStatusEffect: function(poke, opp, move) {
         if (typeof Object.keys(move.modifier) !== 'undefined' && Object.keys(move.modifier).length > 0) {
@@ -1197,22 +1248,23 @@ var helper = {
     },
     getStatusEffect: function(poke, stat, modifier){
         var string = poke.name + "'s " + stat + " ";
-        switch(modifier){
-            case -2:
-                string+= "harshly fell! ";
+        var mod = "";
+        switch(modifier[stat]){
+            case "-2":
+                mod = "harshly fell! ";
                 break;
-            case -1:
-                string+= "fell! ";
+            case "-1":
+                mod = "fell! ";
                 break;
-            case 1:
-                string+= "rose! ";
+            case "1":
+                mod = "rose! ";
                 break;
-            case 2:
-                string+= "sharply rose! ";
+            case "2":
+                mod = "sharply rose! ";
                 break;
         }
         
-        return string;
+        return string + mod;
     },
     calcCrit: function() {
         return Math.random() <= .0625 ? 2 : 1;
