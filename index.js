@@ -524,7 +524,7 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLEMODE, {
             response = "You have the following healthy Pokemon: " + healthy + ". Which healthy Pokemon would you like to use? Please say it in the form of 'switch Pikachu' for example.";
             this.emit(':ask', response, response);
         } else if(healthyArr.length == 1) {
-            response = "You don't have any other healthy Pokemon! Please choose fight, open bag, or run away.";
+            response = "You don't have any other healthy Pokemon! Please choose let's fight, open bag, or run away.";
             this.emit(':ask', response, response);
         }
     },
@@ -632,7 +632,7 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
                 if(poke.speed > opp.speed) {
                     //playerFirst();
                     response += helper.attack(poke, opp, move);
-                    var faintRes = helper.isFainted(oppName, playerName, oppParty, party, opp, false);
+                    var faintRes = helper.isFainted(playerName, oppName, party, oppParty, opp, false);
                     response += faintRes.response;
                     this.handler.state = faintRes.state;
                     if(!faintRes.fainted){
@@ -650,7 +650,7 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
                     this.handler.state = faintRes.state;
                     if(!faintRes.fainted){
                         response += helper.attack(poke, opp, move);
-                        faintRes = helper.isFainted(oppName, playerName, oppParty, party, opp, true);
+                        faintRes = helper.isFainted(playerName, oppName, party, oppParty, opp, true);
                         this.handler.state = faintRes.state;
                         response += faintRes.response;
                     }
@@ -658,7 +658,7 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
                     //randomly choose who goes first
                     //playerFirst();
                     response += helper.attack(poke, opp, move);
-                    var faintRes = helper.isFainted(oppName, playerName, oppParty, party, opp, false);
+                    var faintRes = helper.isFainted(playerName, oppName, party, oppParty, opp, false);
                     response += faintRes.response;
                     this.handler.state = faintRes.state;
                     if(!faintRes.fainted){
@@ -676,7 +676,7 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
                     this.handler.state = faintRes.state;
                     if(!faintRes.fainted){
                         response += helper.attack(poke, opp, move);
-                        faintRes = helper.isFainted(oppName, playerName, oppParty, party, opp, true);
+                        faintRes = helper.isFainted(playerName, oppName, party, oppParty, opp, true);
                         this.handler.state = faintRes.state;
                         response += faintRes.response;
                     }
@@ -1032,7 +1032,7 @@ var helper = {
             if(damage > -1){
                 response += (crit == 2 && helper.calcEffectivity(move, opp) > 0) ? "A critical hit! " : "";
                 response += helper.getEffectivity(helper.calcEffectivity(move, opp));
-                response += poke.OT + "'s " + poke.name + " did " + damage + " HP of damage to " + opp.OT + "'s " + opp.name + ". ";
+                response += poke.OT + "'s " + poke.name + " did " + damage + " H P of damage to " + opp.OT + "'s " + opp.name + ". ";
             } else {
                 //attack missed
                 response += poke.name + "'s attack missed! ";
@@ -1136,6 +1136,7 @@ var helper = {
         
     },
     //checks to see if POKE has fainted, playerName owns it
+    //playerName should always be the Alexa player, oppName should always be opponent's name, etc., but poke is the poke to check if fainted
     isFainted: function(playerName, oppName, party, oppParty, poke, second) {
         var response = ""; 
         var healthyArr;
