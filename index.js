@@ -191,7 +191,6 @@ var Pokemon = {
     }
 };
 var pokedex = ["squirtle", "charmander", "bulbasaur", "Pikachū", "eevee"];
-console.log(pokedex);
 
 // This is the intial welcome message
 var welcomeMessage = "Hello, there! Glad to meet you! Welcome to the world of Pokémon! My name is Oak. People affectionately refer to me as the Pokémon Professor. This world… …is inhabited far and wide by creatures called Pokémon! For some people, Pokémon are pets. Other use them for battling. As for myself… I study Pokémon as a profession. But first, tell me a little about yourself. Now tell me. Are you a boy or a girl?";
@@ -582,7 +581,7 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
         var poke = party[0];
         var playerName = this.attributes['playerName'];
         var opp = oppParty[0];
-        var rivalName = this.attributes['opponent'];
+        var oppName = this.attributes['opponent'];
         var chosenMove = this.event.request.intent.slots.Move.value;
         chosenMove = chosenMove.replace(/\s+/g, "").toLowerCase();
         var moveset = poke.learnset;
@@ -591,6 +590,8 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
         var pokeDmg; //how much damage TO player poke
         var oppDmg; //how much damage TO opp poke
         var crit;
+        var moveIndex;
+        var state = this.handler.state;
         
         this.attributes['chosenMove'] = {
             move: chosenMove,
@@ -599,28 +600,29 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
         //issue with indexOf
         
         //Need to check if player must use struggle because out of PP on all moves
-        console.log(moveset.indexOf(chosenMove));
-        if(helper.hasMove(poke, moveset) > -1){
+        moveIndex = helper.hasMove(poke, chosenMove, moveset);
+        if(moveIndex > -1){
             //move is in moveset
-            var move = moveset[chosenMove];
+            var move = moveset[moveIndex];
             
             if(move.pp > 0){
                 var playerFirst = function() {
                     response += helper.attack(poke, opp, move);
-                    var faintRes = helper.isFainted(this, opp, false);
+                    //isFainted: function(playerName, oppName, party, oppParty, poke, second) {
+                    var faintRes = helper.isFainted(oppName, playerName, oppParty, party, opp, true, state);
                     response += faintRes.response;
                     if(!faintRes.fainted){
                         response += helper.attack(opp, poke, oppMove);
-                        response += helper.isFainted(this, poke, true).response;
+                        response += helper.isFainted(playerName, oppName, party, oppParty, poke, false, state).response;
                     }
                 };
                 var playerSecond = function() {
                     response += helper.attack(opp, poke, oppMove);
-                    var faintRes = helper.isFainted(this, poke, false);
+                    var faintRes = helper.isFainted(playerName, oppName, party, oppParty, poke, false, state);
                     response += faintRes.response;
                     if(!faintRes.fainted){
                         response += helper.attack(poke, opp, move);
-                        response += helper.isFainted(this, opp, true).response;
+                        response += helper.isFainted(oppName, playerName, oppParty, party, opp, true, state).response;
                     }
                 };
                 
@@ -664,7 +666,6 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
         this.emit(':ask', bicycleMessage);
     },
     'Unhandled': function () {
-        console.log("hello");
         this.emit(':ask', unhandledGeneral, unhandledGeneral);
     }
 });
@@ -701,13 +702,13 @@ var switchPokeHandlers = Alexa.CreateStateHandler(states.SWITCHPOKEMODE, {
         //need to say pokemon switched, trainer switched out party[pokeIndex] for part[0]
         response += playerName + " took out " + party[pokeIndex].name + ", and put in " + party[0].name + ". ";
         //switchPokemon: function(party, p1, p2) p1 and p2 are indeces 
-        
+        poke = party[0];
         
         //opponent attacks
         response += helper.attack(opp, poke, oppMove);
         
         //check if faint
-        response += helper.isFainted(this, party[0], true).response;
+        response += helper.isFainted(playerName, null, party, oppParty, poke, true).response;
         
         this.emit(':ask', response, response);
         
@@ -876,7 +877,7 @@ var helper = {
         var poke = {
             'name': name,
             'OT': OT,
-            'type': Pokemon[name].type,
+            'types': Pokemon[name].types,
             'IVs': {
                 'hp': helper.generateRandomInt(0,31),
                 'spdef': helper.generateRandomInt(0,31),
@@ -960,8 +961,7 @@ var helper = {
         context.attributes['oppParty'] = undefined;
         return money;
     },
-    healTeam: function(context) {
-        var party = context.attributes['party'];
+    healTeam: function(party) {;
         party.forEach(function(poke) {
             helper.heal(poke);
         })
@@ -980,7 +980,8 @@ var helper = {
         var crit;
         var acc;
         response += poke.OT + " used " + move + "! ";
-        if(move.cat == "physical"){
+        console.log(move);
+        if(move.cat == "physical" || move.cat == "special"){
             crit = helper.calcCrit();
             damage = helper.calcDamage(poke, opp, move, crit);
             if(damage > -1){
@@ -992,6 +993,7 @@ var helper = {
                 response += poke.name + "'s attack missed! ";
             }
         } else {
+            console.log("why am I here?");
             response += helper.calcStatusEffect(poke, opp, move);
         }
         for(var moveIndex = 0; moveIndex < poke.learnset.length; moveIndex++){
@@ -1069,7 +1071,7 @@ var helper = {
     },
     //poke is attacker, opp is defender, move is move object
     calcDamage: function(poke, opp, move, crit) {
-        var modifier = crit * calcRandDamage() * calcSTAB(poke, move) * calcEffectivity(move, opp);
+        var modifier = crit * helper.calcRandDamage() * helper.calcSTAB(poke, move) * helper.calcEffectivity(move, opp);
         //I should be able to say if it is critical!
         if(move.cat != "status"){
             if(Math.random()*100 < move.acc){
@@ -1086,13 +1088,10 @@ var helper = {
         }
         
     },
-    isFainted: function(context, poke, second) {
+    //checks to see if POKE has fainted, playerName owns it
+    isFainted: function(playerName, oppName, party, oppParty, poke, second, state) {
         var response = ""; 
         var healthyArr;
-        var playerName = context.attributes['playerName'];
-        var oppName = context.attributes['opponent'];
-        var party = context.attributes['party']
-        var oppParty = context.attributes['oppParty'];
         var playerPoke = party[0];
         var opp;
         var explvl;
@@ -1110,10 +1109,10 @@ var helper = {
                 if(healthyArr.length === 0) {
                     money = 50;
                     response += playerName + " is out of usable Pokemon! " + playerName + " blacked out! " + playerName + " dropped " + money + " PokeDollars and ran off! Do you still want to continue?";
-                    context.handler.state = states.WHITEOUTMODE;
+                    state = states.WHITEOUTMODE;
                 } else {
                     response += "You have the following Pokemon left: " + healthyArr.join(" ") + ". Please say 'switch' and then the Pokemon's name in order to switch them. ";
-                    context.handler.state = states.SWITCHPOKEMODE;
+                    state = states.SWITCHPOKEMODE;
                 }
             } else if(poke.OT == "wild") {
                 //wild pokemon fainted and battle is over
@@ -1123,7 +1122,7 @@ var helper = {
                 response += explvl[1] ? playerPoke + " leveled up to level " + playerPoke.level + "! " : "";
                 response += battleOverMessage; 
                 helper.endBattle(context, party);
-                context.handlers.state = states.BATTLEOVERMODE;
+                state = states.BATTLEOVERMODE;
             } else {
                 //pokemon is owned by trainer, must check to switch out or battle is over
                 opp = poke;
@@ -1161,17 +1160,20 @@ var helper = {
                     
                     response += battleOverMessage; 
                     
-                    context.handlers.state = states.BATTLEOVERMODE;
+                    state = states.BATTLEOVERMODE;
                 }
             }
         } else {
             response += second ? "What would you like to do next? Please say fight or attack, switch Pokemon, open bag, or run away." : "";
-            context.handler.state = states.BATTLEMODE;
+            state = states.BATTLEMODE;
         }
         return {'fainted': fainted, 'response': response};
     },
     calcStatusEffect: function(poke, opp, move) {
-        var stat = Object.keys(move.modifier)[1];
+        console.log(move.modifier);
+        if (typeof Object.keys(move.modifier) !== 'undefined' && Object.keys(move.modifier).length > 0) {
+            var stat = Object.keys(move.modifier)[1];
+        }
         var response;
         if(move.modifier.self){
             if(poke.modifiers[stat] < 6 || poke.modifiers[stat] > -6){
@@ -1232,11 +1234,14 @@ var helper = {
         return healthyArr;
     },
     calcSTAB: function(poke, move) {
-        return (move.type == poke.type[0] || move.type == poke.type[1]) ? 1.5 : 1;
+        console.log(poke);
+        console.log(poke.types);
+        console.log(poke.types[0]);
+        return (move.type == poke.types[0] || move.type == poke.types[1]) ? 1.5 : 1;
     },
-    hasMove: function(poke, moveset) {
+    hasMove: function(poke, chosenMove, moveset) {
         for(var moveIndex = 0; moveIndex < poke.learnset.length; moveIndex++){
-            if(move.name == moveset[moveIndex].name){
+            if(chosenMove == moveset[moveIndex].name){
                 return moveIndex;
             }
         }
