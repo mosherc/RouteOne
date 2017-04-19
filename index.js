@@ -513,7 +513,7 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLEMODE, {
         var moves = poke.learnset;
         var moveString = moves.map(function(move){return move.name;}).join(", ");
         
-        var response = "Your " + poke.name + " knows " + moveString + ". Please select one of these moves by saying 'use move'!";
+        var response = "Your " + poke.name + " knows " + moveString + ". Please select one of these moves by saying the word 'use' and the name of the move!";
         
         this.handler.state = states.CHOOSEMOVEMODE;
         this.emit(':ask', response, response);
@@ -1226,16 +1226,28 @@ var helper = {
     },
     getStatusEffect: function(poke, stat, modifier){
         var string = poke.name + "'s " + stat + " ";
-        var mod = "";
+        var mod = "hello ";
         switch(modifier[stat]){
+            case -2:
+                mod = "harshly fell! ";
+                break;
             case "-2":
                 mod = "harshly fell! ";
+                break;
+            case -1:
+                mod = "fell! ";
                 break;
             case "-1":
                 mod = "fell! ";
                 break;
+            case 1:
+                mod = "rose! ";
+                break;
             case "1":
                 mod = "rose! ";
+                break;
+            case 2:
+                mod = "sharply rose! ";
                 break;
             case "2":
                 mod = "sharply rose! ";
