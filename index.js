@@ -17,10 +17,28 @@ var states = {
     WHITEOUTMODE: '_WHITEOUTMODE',
     BATTLEOVERMODE: '_BATTLEOVERMODE',
     RUNAWAYMODE: '_RUNAWAYMODE',
+    POKECENTERMODE: '_POKECENTERMODE',
+    POKEMARTMODE: '_POKEMARTMODE',
+    CITYMODE: '_CITYMODE',
     ASKMODE: '_ASKMODE',                    // Alexa is asking user the questions.
     DESCRIPTIONMODE: '_DESCRIPTIONMODE'     // Alexa is describing the final choice and prompting to start again or quit
 };
-
+var locations = {
+    'Pallet Town': {
+        name: "Pallet Town",
+        next: 'route 1'
+    },
+    'route 1': {
+        pokemon: {
+            pidgey: 50,
+            rattata: 50
+        },
+        trainers: 20,
+        grass: 60,
+        items: [],
+        
+    } 
+};
 var attacks = {
     'growl':{
         'name': 'growl',
@@ -69,6 +87,67 @@ var attacks = {
         'power': 40,
         'acc': 100,
         'pp': 30
+    },
+    'leechseed': {
+        'name': 'leechseed',
+        'type': 'grass',
+        'cat': 'status',
+        'power': 0,
+        'acc': 90,
+        'pp': 10,
+        //not implemented yet
+        'modifier': {
+            'self': false,
+            'hp': 1
+        }
+    },
+    'vinewhip': {
+        'name': 'vinewhip',
+        'type': 'grass',
+        'cat': 'physical',
+        'power': 35,
+        'acc': 100,
+        'pp': 10
+    },
+    'poisonpowder': {
+        'name': 'poisonpowder',
+        'type': 'poison',
+        'cat': 'status',
+        'power': 0,
+        'acc': 75,
+        'pp': 35
+    },
+    'sleeppowder':{
+        'name': 'sleeppowder',
+        'type': 'grass',
+        'acc': 75,
+        'cat': 'status',
+        'pp': 15
+    },
+    'growth': {
+        'name': 'growth',
+        'type': 'normal',
+        'cat': 'status',
+        'acc': 100,
+        'modifier': {
+            'self': true,
+            'spatk': 1
+        }
+    },
+    'razorleaf': {
+        'name': 'razorleaf',
+        'type': 'grass',
+        'cat': 'status',
+        'acc': 95,
+        'power': 55
+    },
+    'solarbeam': {
+        'name': 'solarbeam',
+        'type': 'grass',
+        'cat': 'special',
+        'acc': 100,
+        'power': 120,
+        'pp': 10
     }
 };
 var modifiers = {
@@ -121,8 +200,73 @@ var Pokemon = {
         'types': ['grass', 'poison'],
         'learnset': {
             '1': attacks.tackle,
-            '3': attacks.growl
+            '3': attacks.growl,
+            '7': attacks.leechseed,
+            '13': attacks.vinewhip,
+            '20': attacks.poisonpowder,
+            '27': attacks.razorleaf,
+            '34': attacks.growth,
+            '41': attacks.sleeppowder,
+            '48': attacks.solarbeam
+        },
+        'catchrate': 45,
+        'evolves': {
+            level: 16,
+            into: 'ivysaur'
         }
+    },
+    'ivysaur': {
+        'name': 'ivysaur',
+        'base':{
+            'hp': 60,
+            'atk': 62,
+            'def': 63,
+            'spatk': 80,
+            'spdef': 80,
+            'speed': 60
+        },
+        'types': ['grass', 'poison'],
+        'learnset': {
+            '1': attacks.tackle,
+            '3': attacks.growl,
+            '7': attacks.leechseed,
+            '13': attacks.vinewhip,
+            '22': attacks.poisonpowder,
+            '30': attacks.razorleaf,
+            '38': attacks.growth,
+            '46': attacks.sleeppowder,
+            '54': attacks.solarbeam
+        },
+        'catchrate': 45,
+        'evolves': {
+            level: 32,
+            into: 'venusaur'
+        }
+    },
+    'venusaur': {
+        'name': 'ivysaur',
+        'base': {
+            'hp': 80,
+            'atk': 82,
+            'def': 83,
+            'spatk': 100,
+            'spdef': 100,
+            'speed': 80
+        },
+        'types': ['grass', 'poison'],
+        'learnset': {
+            '1': attacks.tackle,
+            '3': attacks.growl,
+            '7': attacks.leechseed,
+            '13': attacks.vinewhip,
+            '22': attacks.poisonpowder,
+            '30': attacks.razorleaf,
+            '43': attacks.growth,
+            '55': attacks.sleeppowder,
+            '65': attacks.solarbeam
+        },
+        'catchrate': 45,
+        'evolves': null
     },
     'squirtle':{
         'name': 'squirtle',
@@ -190,7 +334,8 @@ var Pokemon = {
         }
     }
 };
-var pokedex = ["squirtle", "charmander", "bulbasaur", "Pikachū", "eevee"];
+//need to build pokedex based on names in Pokemon object
+var pokedex = ["squirtle", "charmander", "bulbasaur", "Pikachū", "eevee", "pidgey", "rattata"];
 
 // This is the intial welcome message
 var welcomeMessage = "Hello, there! Glad to meet you! Welcome to the world of Pokémon! My name is Oak. People affectionately refer to me as the Pokémon Professor. This world… …is inhabited far and wide by creatures called Pokémon! For some people, Pokémon are pets. Other use them for battling. As for myself… I study Pokémon as a profession. But first, tell me a little about yourself. Are you a boy or a girl?";
@@ -236,6 +381,9 @@ exports.handler = function (event, context, callback) {
         runAwayHandlers,
         whiteOutHandlers,
         battleOverHandlers,
+        pokeCenterHandlers,
+        pokeMartHandlers,
+        cityHandlers,
         askQuestionHandlers);
     alexa.execute();
 };
@@ -249,6 +397,7 @@ var newSessionHandler = {
     this.attributes['money'] = 0;
     this.attributes['bag'] = [];
     this.attributes['party'] = [];
+    this.attributes['location'] = locations["Pallet Town"];
     this.emit(':ask', welcomeMessage, unhandledSex);
   },'AMAZON.HelpIntent': function () {
     this.handler.state = states.STARTMODE;
@@ -370,6 +519,7 @@ var askMovementHandlers = Alexa.CreateStateHandler(states.MOVEMENTMODE, {
         var movementState = this.attributes['movementState'];
         var response;
         var reprompt;
+        var location = this.attributes['location'];
         
         
         //hard code story lines tied to movement states
@@ -377,10 +527,33 @@ var askMovementHandlers = Alexa.CreateStateHandler(states.MOVEMENTMODE, {
             response = "You see your rival in the lab and he says: <break/> What? It's only " + playerName + "? Gramps isn't around. Would you like to go to the grass to find some pokemon?";
             reprompt = "Would you like to go to the grass or are you just gonna stand there?";
         }
-        if(movementState == 1){
+        else if(movementState == 1){
             response = "Oak stops you and says, <break/> Hey! Wait! Don't go out! It's unsafe! Wild Pokemon live in tall grass! You need your own Pokemon for your protection. I know! Here, come with me! <break/> You follow Oak to the lab. <break/> " + rivalName + " says, Gramps! I'm fed up with waiting! <break/> Oak responds, " + rivalName + "? Let me think… Oh, that's right, I told you to come! Just wait! Here, " + playerName + "! There are three Pokémon here. Haha! The Pokémon are held inside these Pokéballs. When I was young, I was a serious Pokémon Trainer. But now, in my old age, I have only these three left. You can have one. Go on, choose! " + rivalName + " blurts, Hey! Gramps! No fair! What about me? Oak retorts, Be patient! " + rivalName + ". You can have one too! <break/> Do you choose Bulbasaur, the grass Pokemon, Charmander, the fire Pokemon, or Squirtle, the water Pokemon?";
             reprompt = "Come on, choose a Pokemon already.";
             this.handler.state = states.CHOOSEPOKEMONMODE;
+        }
+        else if(movementState == 2){
+            this.attributes['location'] = locations[location.next];
+
+            var randAction = helper.randomAction(location);
+            if(randAction == "trainer"){
+                this.attributes['battle'] = "trainer"; //can also be "trainer" for trainer battle, or "wild" for wild battle
+                this.attributes['opponent'] = helper.generateOT();
+                this.attributes['oppParty'] = helper.generateParty(this.attributes['opponent']);
+                this.handler.state = states.BATTLEMODE;
+            } else if (randAction == "wild"){
+                this.attributes['battle'] = "wild"; //can also be "trainer" for trainer battle, or "wild" for wild battle
+                this.attributes['opponent'] = "wild";
+                this.attributes['oppParty'] = helper.generateRandomPoke(location);
+                this.handler.state = states.BATTLEMODE;
+            } else if (randAction == "item"){
+                //get item
+            } else {
+                //no encounters
+            }
+            
+            //random trainer battle, wild battle, item, or nothing
+            
         }
         this.attributes['movementState']++;
         this.emit(':ask', response, reprompt);
@@ -459,15 +632,14 @@ var askPokemonHandlers = Alexa.CreateStateHandler(states.CHOOSEPOKEMONMODE, {
             rivalStarter = helper.generatePokemon(rivalStarter, true, rivalName);
             
             this.attributes['party'] = [starter];
-            this.attributes['battle'] = "first";
+            this.attributes['battle'] = "first"; //can also be "trainer" for trainer battle, or "wild" for wild battle
             this.attributes['opponent'] = rivalName;
             this.attributes['oppParty'] = [rivalStarter];
             //helper.battleSetup(this, playerName, rivalName, "first", [rivalStarter]);
             
             
             this.handler.state = states.BATTLEMODE;
-            this.emit(':ask', playerName + " received the " + starter.name + " from Professor Oak! Your rival walks over to the " + rivalStarter.name + " and says, I'll take this one then! " + rivalName + " received the " + rivalStarter.name + " from Professor Oak! Oak says, if a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town. " + rivalName + " stops you and says, Wait, " + playerName + "! Let's check out our Pokemon! Come on, I'll take you on! ... Rival " + rivalName + " would like to battle! Rival " + rivalName + " sent out " + rivalStarter.name + "! Go! " + starter.name + "! Oak interjects saying, Oh for Pete's sake...So pushy as always. " + rivalName + ". You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. The trainer that makes the other trainer's Pokemon faint by lowering their hp to zero wins. But rather than talking about it, you'll learn more from experience. Try battling and see for yourself. What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.", "What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.");
-            //<audio src='https://66.90.93.122/ost/pokemon-original-game-soundtrack/zawnfmpnge/105-rival-appears.mp3'/>
+            this.emit(':ask', playerName + " received the " + starter.name + " from Professor Oak! Your rival walks over to the " + rivalStarter.name + " and says, I'll take this one then! " + rivalName + " received the " + rivalStarter.name + " from Professor Oak! Oak says, if a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town. " + rivalName + " stops you and says, Wait, " + playerName + "! Let's check out our Pokemon! Come on, I'll take you on! <audio src='https://s3.amazonaws.com/colinmosher/rivalappears.mp3'/>... Rival " + rivalName + " would like to battle! Rival " + rivalName + " sent out " + rivalStarter.name + "! Go! " + starter.name + "! Oak interjects saying, Oh for Pete's sake...So pushy as always. " + rivalName + ". You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. The trainer that makes the other trainer's Pokemon faint by lowering their hp to zero wins. But rather than talking about it, you'll learn more from experience. Try battling and see for yourself. What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.", "What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.");
         }
         else {
             this.emit(':ask', "Please choose either Bulbasaur, Squirtle, or Charmander.", "Please choose either Bulbasaur, Squirtle, or Charmander.");
@@ -784,6 +956,32 @@ var bagHandlers = Alexa.CreateStateHandler(states.BAGMODE, {
 
 var whiteOutHandlers = Alexa.CreateStateHandler(states.WHITEOUTMODE, {
     
+    'AMAZON.YesIntent': function () {
+        var playerName = this.attributes['playerName'];
+        var party = this.attributes['party'];
+        var rivalName = this.attributes['rivalName'];
+        var rivalStarter = this.attributes['oppParty'][0];
+        var response;
+        
+        //heal party because whited out
+        
+        
+        if(this.attributes['movementState'] <= 2){
+            this.attributes['battle'] = undefined;
+            this.attributes['opponent'] = undefined;
+            this.attributes['oppParty'] = undefined;
+            response = rivalName " says, Yeah! Am I great or what! Oak says, hmm...how disappointing...If you win, you earn prize money, and your Pokemon grow. But if you lose, " + playerName + ", you end up paying prize money...However since you had no warning this time, I'll pay for you. But things won't be this way once you step out these doors. That's why you must strengthen your Pokemon by battling wild Pokemon. Your rival says, ok I'll make my Pokemon battle to toughen it up! " + playerName + "! Gramps! Smell ya later! What would you like to do now? Would you like to go to Route 1?";
+            helper.healTeam(party);
+            this.handler.state = states.MOVEMENTMODE;
+        } else {
+            //end up back at pokemon center
+            //should movement state go back one?
+            this.attributes['movementState']--;
+            this.handler.state = states.POKECENTERMODE;
+            response = "Welcome to the Pokemon Center! Would you like me to heal your Pokemon back to perfect health?";
+        }
+        this.emit(':ask', response, response);
+    },
     'AMAZON.HelpIntent': function () {
         this.emit(':ask', unhandledGeneral, unhandledGeneral);
     },
@@ -808,6 +1006,11 @@ var whiteOutHandlers = Alexa.CreateStateHandler(states.WHITEOUTMODE, {
 
 var battleOverHandlers = Alexa.CreateStateHandler(states.BATTLEOVERMODE, {
     
+    'YesIntent': function () {
+        this.attributes['battle'] = undefined;
+        this.attributes['opponent'] = undefined;
+        this.attributes['oppParty'] = undefined;
+    },
     'AMAZON.HelpIntent': function () {
         this.emit(':ask', unhandledGeneral, unhandledGeneral);
     },
@@ -831,6 +1034,98 @@ var battleOverHandlers = Alexa.CreateStateHandler(states.BATTLEOVERMODE, {
 });
 
 var runAwayHandlers = Alexa.CreateStateHandler(states.RUNAWAYMODE, {
+    
+    'AMAZON.HelpIntent': function () {
+        this.emit(':ask', unhandledGeneral, unhandledGeneral);
+    },
+    'AMAZON.StopIntent': function () {
+        this.emit(':tell', this.attributes['goodbyeMessage']);
+    },
+    'AMAZON.CancelIntent': function () {
+        this.emit(':tell', this.attributes['goodbyeMessage']);
+    },
+    'AMAZON.StartOverIntent': function () {
+        // reset the game state to start mode
+        this.handler.state = states.STARTMODE;
+        this.emit(':ask', welcomeMessage, repeatWelcomeMessage);
+    },
+    'BicycleIntent': function () {
+        this.emit(':ask', bicycleMessage);
+    },
+    'Unhandled': function () {
+        this.emit(':ask', unhandledGeneral, unhandledGeneral);
+    }
+});
+
+var pokeCenterHandlers = Alexa.CreateStateHandler(states.POKECENTERMODE, {
+    
+    'AMAZON.YesIntent': function () {
+        var playerName = this.attributes['playerName'];
+        var party = this.attributes['party'];
+        var rivalName = this.attributes['rivalName'];
+        var rivalStarter = this.attributes['oppParty'][0];
+        var response = "Okay, I'll take your Pokemon for a few seconds. <audio src='https://s3.amazonaws.com/colinmosher/pokecenter.mp3'/> Thank you for waiting. We've restored your Pokemon to full health. We hope to see you again! Where would you like to go now? You can say go back to the city, leave, or heal your pokemon again.";
+        
+        this.handler.state = states.CITYMODE;
+        
+        // play healing sound!!!
+    },
+    'HealIntent': function () {
+        var response = "Welcome to the Pokemon Center! Would you like me to heal your Pokemon back to perfect health?";
+        this.emit(':ask', response, response);
+    },
+    'LeaveIntent': function () {
+        var currCity = this.attributes['location'];
+        var response = "You head back out to " + currCity + ". ";
+        this.handler.state = states.CITYMODE;
+    },
+    'AMAZON.HelpIntent': function () {
+        this.emit(':ask', unhandledGeneral, unhandledGeneral);
+    },
+    'AMAZON.StopIntent': function () {
+        this.emit(':tell', this.attributes['goodbyeMessage']);
+    },
+    'AMAZON.CancelIntent': function () {
+        this.emit(':tell', this.attributes['goodbyeMessage']);
+    },
+    'AMAZON.StartOverIntent': function () {
+        // reset the game state to start mode
+        this.handler.state = states.STARTMODE;
+        this.emit(':ask', welcomeMessage, repeatWelcomeMessage);
+    },
+    'BicycleIntent': function () {
+        this.emit(':ask', bicycleMessage);
+    },
+    'Unhandled': function () {
+        this.emit(':ask', unhandledGeneral, unhandledGeneral);
+    }
+});
+
+var pokeMartHandlers = Alexa.CreateStateHandler(states.POKEMARTMODE, {
+    
+    'AMAZON.HelpIntent': function () {
+        this.emit(':ask', unhandledGeneral, unhandledGeneral);
+    },
+    'AMAZON.StopIntent': function () {
+        this.emit(':tell', this.attributes['goodbyeMessage']);
+    },
+    'AMAZON.CancelIntent': function () {
+        this.emit(':tell', this.attributes['goodbyeMessage']);
+    },
+    'AMAZON.StartOverIntent': function () {
+        // reset the game state to start mode
+        this.handler.state = states.STARTMODE;
+        this.emit(':ask', welcomeMessage, repeatWelcomeMessage);
+    },
+    'BicycleIntent': function () {
+        this.emit(':ask', bicycleMessage);
+    },
+    'Unhandled': function () {
+        this.emit(':ask', unhandledGeneral, unhandledGeneral);
+    }
+});
+
+var cityHandlers = Alexa.CreateStateHandler(states.CITYMODE, {
     
     'AMAZON.HelpIntent': function () {
         this.emit(':ask', unhandledGeneral, unhandledGeneral);
@@ -894,6 +1189,18 @@ var helper = {
         max = Math.floor(max);
         return Math.floor(Math.random() * (max-min+1)) + min;
     },
+    generateRandomPoke: function(location) {
+        var pokeOnRoute = Object.keys(location.pokemon);
+        var rand = Math.random()*100;
+        var comparison = 0;
+        pokeOnRoute.forEach(function(poke) {
+            comparison += location.pokemon[poke];
+            if(rand < comparison){
+                return helper.generatePokemon(poke, true, "wild");
+                break;
+            }
+        });
+    },
     //name is official name of pokemon, starter is boolean true if pokemon is a starter (level 5) wild is boolean for wild (true) or not (false)
     generatePokemon: function(name, starter, OT) {
         var poke = {
@@ -951,10 +1258,12 @@ var helper = {
         return poke;
     },
     generateParty: function(OT){
-        var size = helper.generateRandomInt(1,5);
+        var size = helper.generateRandomInt(1,6);
         var party = []
-        for(var i = 0; i <= size; i++){
-            var randPoke = helper.generatePokemon(helper.generateRandomInt(0, pokedex.length-1), false, OT);
+        for(var i = 1; i <= size; i++){
+            //should probably generate pokemon not completely randomly
+            //generated party should only generate pokemon that can be at that level (ie current level less than evolution's level)
+            var randPoke = helper.generatePokemon(pokedex[helper.generateRandomInt(0, pokedex.length-1)], false, OT);
             party.push(randPoke);
         }
     },
@@ -976,9 +1285,7 @@ var helper = {
         
         //heal rival pokemon?
         //reset battle setup for opponent
-//        this.attributes['battle'] = undefined;
-//        this.attributes['opponent'] = undefined;
-//        this.attributes['oppParty'] = undefined;
+        
         //maybe add money!
         var money = Math.round(Math.random() * 25 * moneyMult + 30 * moneyMult);
         
@@ -1136,8 +1443,9 @@ var helper = {
                 healthyArr = helper.getHealthyParty(party);
 
                 if(healthyArr.length === 0) {
-                    money = 50;
-                    response += playerName + " is out of usable Pokemon! " + playerName + " blacked out! " + playerName + " dropped " + money + " PokeDollars and ran off! Do you still want to continue?";
+                    money = Math.floor(0.333 * helper.endBattle(party));
+                    response += playerName + " is out of usable Pokemon! " + playerName + " blacked out! " + playerName + " dropped " + money + " PokieDollars and ran off! Do you still want to continue?";
+                    money = -money;
                     state = states.WHITEOUTMODE;
                 } else {
                     response += "You have the following Pokemon left: " + healthyArr.join(" ") + ". Please say 'switch' and then the Pokemon's name in order to switch them. ";
@@ -1169,16 +1477,12 @@ var helper = {
                     }
                     helper.switchPokemon(oppParty, 0, pokeIndex);
                     response += oppParty[0].OT + " sent out " + oppParty[0] + "! ";
-                    
-                    //if player killed trainer's pokemon first (second == false), then trainer should not automatically be able to go first
-                    
-                    //either way, response should be this because trainer has healthy left, so battle continues
                     response += "What would you like to do next? Please say let's fight, switch Pokemon, open bag, or run away.";
                     
                 } else {
                     //opp has been defeated
                     money = helper.endBattle(party);
-                    response += playerName + " earned " + money + " PokeDollars from " + oppName + ". ";
+                    response += playerName + " earned " + money + " PokieDollars from " + oppName + ". ";
                     
                     //Trainer should be able to make witty response!
                     
@@ -1226,29 +1530,21 @@ var helper = {
     },
     getStatusEffect: function(poke, stat, modifier){
         var string = poke.name + "'s " + stat + " ";
-        var mod = "hello ";
+        var mod = "";
         switch(modifier[stat]){
             case -2:
-                mod = "harshly fell! ";
-                break;
             case "-2":
                 mod = "harshly fell! ";
                 break;
             case -1:
-                mod = "fell! ";
-                break;
             case "-1":
                 mod = "fell! ";
                 break;
             case 1:
-                mod = "rose! ";
-                break;
             case "1":
                 mod = "rose! ";
                 break;
             case 2:
-                mod = "sharply rose! ";
-                break;
             case "2":
                 mod = "sharply rose! ";
                 break;
@@ -1281,6 +1577,20 @@ var helper = {
             }
         }
         return -1;
+    },
+    randomAction: function(location) {
+        var probNothingHappens = 60;
+        var range = location.trainers + location.grass + location.items.length + probNothingHappens;
+        var rand = Math.random()*range;
+        if(rand < location.trainers){
+            return "trainer";
+        } else if (rand < location.trainers + location.grass){
+            return "wild";
+        } else if (rand < location.trainers + location.grass + location.items.length){
+            return "item";
+        } else {
+            return "";
+        }
     },
     nthroot: function(x, n){
         try {
