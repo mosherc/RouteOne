@@ -184,6 +184,70 @@ var typeChart = {
     dragon   : {normal: 1,   fighting:1,	 flying:1,	poison:1,	ground:1,	rock:1, 	bug:1,    ghost:1,    steel:0.5,    fire:1,	   water:1,	 grass:1,	electric:1,	  psychic:1,	ice:1,	  dragon:2,	  dark:1},
     dark     : {normal: 1,   fighting:0.5,	 flying:1,	poison:1,	ground:1,	rock:1, 	bug:1,    ghost:2,    steel:0.5,    fire:1,	   water:1,	 grass:1,	electric:1,	  psychic:2,	ice:1,	  dragon:1,	  dark:1}
 };
+var items = {
+    potion : {
+        name: 'potion',
+        price: 200,
+        type: "healing",
+        hp: 20
+    }, 
+    superpotion : {
+        name: 'superpotion',
+        price: 700,
+        type: "healing",
+        hp: 50
+    },
+    hyperpotion: {
+        name: 'hyperpotion',
+        price: 1500,
+        type: "healing",
+        hp: 200
+    },
+    maxpotion: {
+        name: 'maxpotion',
+        price: 2500,
+        type: "healing",
+        hp: 9999999
+    },
+    fullrestore: {
+        name: 'fullrestore',
+        price: 3000,
+        type: 'restore',
+        hp: 999999,
+        status: 'all'
+    },
+    fullheal: {
+        name: 'fullheal',
+        price: 600,
+        type: 'restore',
+        hp: 0,
+        status: 'all'
+    },
+    pokéball: {
+        name: 'pokéball',
+        price: 200,
+        type: 'ball',
+        catchrate: 1
+    },
+    greatball: {
+        name: 'greatball',
+        price: 600,
+        type: 'ball',
+        catchrate: 1.5
+    },
+    ultraball: {
+        name: 'ultraball',
+        price: 1200,
+        type: 'ball',
+        catchrate: 2
+    },
+    masterball: {
+        name: 'masterball',
+        price: 999999,
+        type: 'ball',
+        catchrate: 255
+    }
+}
 
 //Pokemon constants only
 var Pokemon = {
@@ -397,6 +461,7 @@ var newSessionHandler = {
     this.attributes['money'] = 0;
     this.attributes['bag'] = [];
     this.attributes['party'] = [];
+    this.attributes['chosenItem'] = null;
     this.attributes['location'] = locations["Pallet Town"];
     this.emit(':ask', welcomeMessage, unhandledSex);
   },'AMAZON.HelpIntent': function () {
@@ -639,7 +704,8 @@ var askPokemonHandlers = Alexa.CreateStateHandler(states.CHOOSEPOKEMONMODE, {
             
             
             this.handler.state = states.BATTLEMODE;
-            this.emit(':ask', playerName + " received the " + starter.name + " from Professor Oak! Your rival walks over to the " + rivalStarter.name + " and says, I'll take this one then! " + rivalName + " received the " + rivalStarter.name + " from Professor Oak! Oak says, if a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town. " + rivalName + " stops you and says, Wait, " + playerName + "! Let's check out our Pokemon! Come on, I'll take you on! <audio src='https://s3.amazonaws.com/colinmosher/rivalappears.mp3'/>... Rival " + rivalName + " would like to battle! Rival " + rivalName + " sent out " + rivalStarter.name + "! Go! " + starter.name + "! Oak interjects saying, Oh for Pete's sake...So pushy as always. " + rivalName + ". You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. The trainer that makes the other trainer's Pokemon faint by lowering their hp to zero wins. But rather than talking about it, you'll learn more from experience. Try battling and see for yourself. What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.", "What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.");
+            this.emit(':ask', playerName + " received the " + starter.name + " from Professor Oak! Your rival walks over to the " + rivalStarter.name + " and says, I'll take this one then! " + rivalName + " received the " + rivalStarter.name + " from Professor Oak! Oak says, if a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town. " + rivalName + " stops you and says, Wait, " + playerName + "! Let's check out our Pokemon! Come on, I'll take you on! <audio src='https://s3.amazonaws.com/colinmosher/rivalappears.mp3'/>... Rival " + rivalName + " would like to battle! Rival " + rivalName + " sent out " + rivalStarter.name + "! Go! " + starter.name + "! Oak interjects saying, Oh for Pete's sake...So pushy as always. " + rivalName + ". You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. Anyway, you'll learn more from experience. What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.", "What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.");
+            //https://www.dropbox.com/s/8q9teg6m7eyrjgs/rivalappears.mp3
         }
         else {
             this.emit(':ask', "Please choose either Bulbasaur, Squirtle, or Charmander.", "Please choose either Bulbasaur, Squirtle, or Charmander.");
@@ -1064,11 +1130,14 @@ var pokeCenterHandlers = Alexa.CreateStateHandler(states.POKECENTERMODE, {
         var party = this.attributes['party'];
         var rivalName = this.attributes['rivalName'];
         var rivalStarter = this.attributes['oppParty'][0];
-        var response = "Okay, I'll take your Pokemon for a few seconds. <audio src='https://s3.amazonaws.com/colinmosher/pokecenter.mp3'/> Thank you for waiting. We've restored your Pokemon to full health. We hope to see you again! Where would you like to go now? You can say go back to the city, leave, or heal your pokemon again.";
+        var response = "Okay, I'll take your Pokemon for a few seconds. <audio src='https://s3.amazonaws.com/colinmosher/pokecenter.mp3'/> Thank you for waiting. We've restored your Pokemon to full health. We hope to see you again! Where would you like to go now? You can say go back to the city, leave, open the PC, or heal your pokemon again.";
+        helper.healTeam(party);
         
-        this.handler.state = states.CITYMODE;
-        
-        // play healing sound!!!
+        this.emit(':ask', response, response);
+    },
+    'AMAZON.NoIntent': function () {
+        var response = "We hope to see you again! Where would you like to go now? You can say go back to the city, leave, open the PC, or heal your pokemon again.";
+        this.emit(':ask', response, response);
     },
     'HealIntent': function () {
         var response = "Welcome to the Pokemon Center! Would you like me to heal your Pokemon back to perfect health?";
@@ -1103,6 +1172,80 @@ var pokeCenterHandlers = Alexa.CreateStateHandler(states.POKECENTERMODE, {
 
 var pokeMartHandlers = Alexa.CreateStateHandler(states.POKEMARTMODE, {
     
+    'MoneyIntent': function () {
+        
+        var money = this.attributes['money'];
+        var response = "You have " + money + " PokieDollars. ";
+        if(money < 1000) {
+            response += "Looks like you're running a little low! Don't think about shoplifting me, my Growlithe is watching you! ";
+        } else if (money < 10000) {
+            response += "Have I got a deal just for you! I'll let you have this swell Magikarp for just 500. What do you say? ... Well I don't give refunds! ";
+        } else if (money < 50000) {
+            response += "That's enough for a few Rage Candy Bars! Just 300 PokieDollars! Totally nothing suspicious about that! ";
+        } else if (money < 100000) {
+            response += "Jeez kid, did your mom give you all that allowance? What's in your wallet? ";
+        } else {
+            response += "Oh my Arceus! I don't think I've ever seen that much money! ";
+        }
+        response += "Come on, don't be such a slowpoke! What would you like to do next? Ask me what am I selling, tell me what you want to buy, or leave!";
+        this.emit(':ask', response, response);
+    },
+    'AskItemsIntent': function () {
+        var response = "I have the following items: "
+        var itemNames = Object.keys(items);
+        for(var itemIndex = 0; itemIndex < itemNames.length-1; itemIndex++) {
+            response: += itemNames[itemIndex] + "s, ";
+        }
+        response += "and " + itemNames[itemNames.length-1] + "s. Which would you like to buy?";
+        this.emit(':ask', response, response);
+    },
+    'PurchaseIntent': function () {
+        var item = this.event.request.intent.slots.Item.value;
+        item = item.replace(/\s+/g, "").toLowerCase();
+        this.attributes['chosenItem'] = {
+            item: item,
+            num: 0
+        };
+        var response = "You selected " + item + ", which costs " + items[item].price + " each. How many would you like to buy?"; 
+        
+        this.emit(':ask', response, response);
+    },
+    'ChooseNumberIntent': function () {
+        var num = this.event.request.intent.slots.Number.value;
+        var money = this.attributes['money'];
+        var item = this.attributes['chosenItem'];
+        var response;
+        
+        if (item == null) {
+            response = "You have not chosen an item yet! Please ask me how much money you have, what items I have, or just tell me what you'd like to buy. Or you can leave!";
+        } else {
+            this.attributes['chosenItem'].num = num;
+            item = this.attributes['chosenItem'].item;
+        
+            response = num + " " + item;
+            response += num > 1 ? "s " : " ";
+            response += "will cost you " + (items[item].price*num) + " PokieDollars. ";
+            response += (items[item].price*num) > money ? : "You do not have enough money! Please select a different amount or item" : "Please say yes to confirm your order!";
+        }
+        
+        this.emit(':ask', response, response);
+        
+    },
+    'AMAZON.YesIntent': function () {
+        var item = this.attributes['chosenItem'];
+        var money = this.attributes['money'];
+        var response;
+        if (item == null) {
+            response = "You have not chosen an item yet! Please ask me how much money you have, what items I have, or just tell me what you'd like to buy. Or you can leave!";
+        } else if (items[item].price*num > money) {
+            
+        }
+        
+        
+    },
+    'AMAZON.NoIntent': function () {
+        
+    },
     'AMAZON.HelpIntent': function () {
         this.emit(':ask', unhandledGeneral, unhandledGeneral);
     },
@@ -1127,6 +1270,16 @@ var pokeMartHandlers = Alexa.CreateStateHandler(states.POKEMARTMODE, {
 
 var cityHandlers = Alexa.CreateStateHandler(states.CITYMODE, {
     
+    'PokeCenterIntent': function () {
+        this.handler.state = states.POKECENTERMODE;
+        var response = "Welcome to the Pokemon Center! Would you like me to heal your Pokemon back to perfect health?";
+        this.emit(':ask', response, response);
+    },
+    'PokeMartIntent': function () {
+        this.handler.state = states.POKEMARTMODE;
+        var response = "Welcome to the Pokemon Mart! Would you like to purchase something today? You can ask me what do I have, or how much money you have, or just tell me what you'd like to buy!";
+        this.emit(':ask', response, response);
+    },
     'AMAZON.HelpIntent': function () {
         this.emit(':ask', unhandledGeneral, unhandledGeneral);
     },
