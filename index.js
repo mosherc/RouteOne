@@ -614,6 +614,9 @@ var askMovementHandlers = Alexa.CreateStateHandler(states.MOVEMENTMODE, {
             this.handler.state = states.CHOOSEPOKEMONMODE;
         }
         else if(movementState == 2){
+            //within a movementState, the player should be able to say YES to continue to next Alexa State, or no (or something else) to stay within the movementState and MOVEMENTMODE
+
+
             this.attributes['location'] = locations[location.next];
 
             var randAction = helper.randomAction(location);
@@ -1077,14 +1080,23 @@ var bagHandlers = Alexa.CreateStateHandler(states.BAGMODE, {
     'GoBackIntent': function () {
         var response;
         var prevState = this.attributes['prevState'];
-        if(null == null){
+        if(prevState == null){
             response = "What would you like to do next? Please say let's fight, switch Pokemon, open bag, or run away.";
             this.handler.state = states.BATTLEMODE;
-            this.emit(':ask', response, response);
         } else {
-            this.handler.state = this.attributes['prevState'];
+            this.handler.state = prevState;
+            if(prevState == '_POKECENTERMODE'){
+                response = "Welcome to the Pokemon Center! Would you like me to heal your Pokemon back to perfect health?";
+            } else if(prevState == '_POKEMARTMODE'){
+                response = "Welcome to the Pokemon Mart! Would you like to purchase something today? You can ask me what do I have, or how much money you have, or just tell me what you'd like to buy!";
+            } else if(prevState == '_CITYMODE'){
+                response = "You close your bag and look at the city. " + helper.getCityActivities(this.attributes['location']);
+            } else if(prevState == '_MOVEMENTMODE'){
+                //add stuff here
+            }
             this.attributes['prevState'] = null;
         }
+        this.emit(':ask', response, response);
 
     },
     'AMAZON.HelpIntent': function () {
