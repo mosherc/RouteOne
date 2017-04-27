@@ -27,6 +27,7 @@ var locations = {
     'pallet town': {
         name: "pallet town",
         buildings: [],
+        type: 'city',
         next: 'route 1'
     },
     'route 1': {
@@ -36,12 +37,14 @@ var locations = {
         },
         trainers: 20,
         grass: 60,
-        items: [],
+        items: ['potion', 'pokeball'],
+        type: 'route',
         next: 'viridian city'
     },
     'viridian city': {
         name: 'viridian city',
         buildings: ['pokemart', 'pokecenter', 'gym'],
+        type: 'city',
         next: 'route 2'
     }
 };
@@ -424,7 +427,7 @@ var goodbyeMessage = "Instead of continuing your adventure to become a Pokemon m
 // This is the message that is repeated if the response to the choose sex question is not heard
 var repeatChooseSex = "Are you an Onix or a Cloyster?";
 
-var battleOverMessage = "Where would you like to go next? You can say 'Go to the PokeCenter' or 'Go to the Pokemart' or 'Keep going' or 'Move Along' to continue.";
+var battleOverMessage = "Would you like to continue on your journey now?";
 
 // unhandled intent prompts
 var unhandledSex = "There are only two genders in Kanto! Please say boy or girl.";
@@ -478,7 +481,8 @@ var newSessionHandler = {
     this.attributes['bag'] = items;
     this.attributes['party'] = [];
     this.attributes['chosenItem'] = null;
-    this.attributes['location'] = locations["Pallet Town"];
+    this.attributes['location'] = locations["pallet town"];
+    this.attributes['lastVisitedCity'] = locations['pallet town'];
     this.emit(':ask', welcomeMessage, unhandledSex);
   },'AMAZON.HelpIntent': function () {
     this.handler.state = states.STARTMODE;
@@ -601,24 +605,27 @@ var askMovementHandlers = Alexa.CreateStateHandler(states.MOVEMENTMODE, {
         var response;
         var reprompt;
         var location = this.attributes['location'];
+        var bag = this.attributes['bag'];
 
-
-        //hard code story lines tied to movement states
+        //reset any finished battles
+        this.attributes['battle'] = null;
+        this.attributes['opponent'] = undefined;
+        this.attributes['oppParty'] = undefined;
+        
+        //hard code story lines tied to movement states?
         if(movementState == 0){
             response = "You see your rival in the lab and he says: <break/> What? It's only " + playerName + "? Gramps isn't around. Would you like to go to the grass to find some pokemon?";
             reprompt = "Would you like to go to the grass or are you just gonna stand there?";
+            this.attributes['movementState']++;
         }
         else if(movementState == 1){
             response = "Oak stops you and says, <break/> Hey! Wait! Don't go out! It's unsafe! Wild Pokemon live in tall grass! You need your own Pokemon for your protection. I know! Here, come with me! <break/> You follow Oak to the lab. <break/> " + rivalName + " says, Gramps! I'm fed up with waiting! <break/> Oak responds, " + rivalName + "? Let me think… Oh, that's right, I told you to come! Just wait! Here, " + playerName + "! There are three Pokémon here. Haha! The Pokémon are held inside these Pokéballs. When I was young, I was a serious Pokémon Trainer. But now, in my old age, I have only these three left. You can have one. Go on, choose! " + rivalName + " blurts, Hey! Gramps! No fair! What about me? Oak retorts, Be patient! " + rivalName + ". You can have one too! <break/> Do you choose Bulbasaur, the grass Pokemon, Charmander, the fire Pokemon, or Squirtle, the water Pokemon?";
             reprompt = "Come on, choose a Pokemon already.";
             this.handler.state = states.CHOOSEPOKEMONMODE;
+            this.attributes['movementState']++;
         }
-        else if(movementState == 2){
+        else if(movementState >= 2){
             //within a movementState, the player should be able to say YES to continue to next Alexa State, or no (or something else) to stay within the movementState and MOVEMENTMODE
-
-
-            this.attributes['location'] = locations[location.next];
-
             var randAction = helper.randomAction(location);
             if(randAction == "trainer"){
                 this.attributes['battle'] = "trainer"; //can also be "trainer" for trainer battle, or "wild" for wild battle
@@ -632,14 +639,25 @@ var askMovementHandlers = Alexa.CreateStateHandler(states.MOVEMENTMODE, {
                 this.handler.state = states.BATTLEMODE;
             } else if (randAction == "item"){
                 //get item
+                var findableItems = location.items;
+                var foundItem = findableItems[helper.generateRandomInt(0, findableItmes.length-1)];
+                this.attributes['bag'][foundItem].count++;
+                response = "You found a " + foundItem + "! You put it in your bag for safekeeping. Would you like to continue forward? Or you can say train to stay here and train. ";
             } else {
-                //no encounters
+                this.attributes['location'] = locations[location.next];
+                location = locations[location.next];
+                response = "You did not encounter any Pokemon and safely made it to " + location.name + ". ";
+                if(location.type == "city") {
+                    response += helper.getCityActivities(location);
+                    this.handler.state = states.CITYMODE;
+                } else {
+                    response += "Would you like to continue? Or you can say train to stay here and train. ";
+                }
             }
-
-            //random trainer battle, wild battle, item, or nothing
-
+            
+            this.attributes['movementState']++;
         }
-        this.attributes['movementState']++;
+        
         this.emit(':ask', response, reprompt);
     },
     'AMAZON.NoIntent': function(){
@@ -663,6 +681,34 @@ var askMovementHandlers = Alexa.CreateStateHandler(states.MOVEMENTMODE, {
             this.handler.state = states.BAGMODE;
             this.emit(':ask', response, response);
         }
+    },
+    'TrainIntent': function () {
+        var response;
+        var location = this.attributes['location'];
+        var bag = this.attributes['bag'];
+        
+        
+        var randAction = helper.randomAction(location);
+        if(randAction == "trainer"){
+            this.attributes['battle'] = "trainer"; //can also be "trainer" for trainer battle, or "wild" for wild battle
+            this.attributes['opponent'] = helper.generateOT();
+            this.attributes['oppParty'] = helper.generateParty(this.attributes['opponent']);
+            this.handler.state = states.BATTLEMODE;
+        } else if (randAction == "wild"){
+            this.attributes['battle'] = "wild"; //can also be "trainer" for trainer battle, or "wild" for wild battle
+            this.attributes['opponent'] = "wild";
+            this.attributes['oppParty'] = helper.generateRandomPoke(location);
+            this.handler.state = states.BATTLEMODE;
+        } else if (randAction == "item"){
+            //get item
+            var findableItems = location.items;
+            var foundItem = findableItems[helper.generateRandomInt(0, findableItmes.length-1)];
+            this.attributes['bag'][foundItem].count++;
+            response = "You found a " + foundItem + "! You put it in your bag for safekeeping. Would you like to continue forward? Or you can say train to stay here and train. ";
+        } else {
+            response = "You did not encounter any Pokemon. Would you like to continue forward? Or you can say train to stay here and train. ";
+        }
+        this.emit(':ask', response, response);
     },
     'AMAZON.HelpIntent': function () {
         this.emit(':ask', helpMovement, helpMovement);
@@ -878,6 +924,7 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
         var oppDmg; //how much damage TO opp poke
         var crit;
         var moveIndex;
+        var location = this.attributes['location'];
 
         //Need to check if player must use struggle because out of PP on all moves
         moveIndex = helper.hasMove(poke, chosenMove, moveset);
@@ -941,12 +988,15 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
                 //move is out of PP
                 response += "That move is out of PP, please select a different move.";
             }
-            this.emit(':ask', response, response);
         } else {
             //move is not in moveset
             response = "That is not an available move. Please choose a different move.";
-            this.emit(':ask', response, response);
         }
+        //if state is not BATTLEMODE, then need to reset battle (or reset battle in following modes?)
+        if(this.handler.state == states.CITYMODE){
+            response += helper.getCityActivities(location);
+        }
+        this.emit(':ask', response, response);
     },
     'AMAZON.HelpIntent': function () {
         this.emit(':ask', unhandledGeneral, unhandledGeneral);
@@ -1047,21 +1097,53 @@ var bagHandlers = Alexa.CreateStateHandler(states.BAGMODE, {
         var response = "";
         var item = this.event.request.intent.slots.Item.value;
         var poke = this.event.request.intent.slots.Pokemon.value;
+        var playerName = this.attributes['playerName'];
         item = items[item];
+        var wildPoke = this.attributes['oppParty']
+        
+        response += playerName + " used " + item.name + "! "
 
-        else if(this.attributes['battle'] == null) {
+        if(this.attributes['battle'] == null) {
             //we are in peaceful state
+            //use item, can't use ball though
 
             this.handler.state = this.attributes['prevState'];
             this.attributes['prevState'] = null;
         } else if(item.type = "ball"){
-            if(this.attributes['battle'] == "wild") {
+            if(this.attributes['battle'] == "wild" && wildPoke != null) {
                 //do the pokeball stuff here
-
-
-
-
-
+                var hpMax = Math.floor((2*Pokemon[wildPoke.name].base.hp+wildPoke.IVs.hp+Math.floor(wildPoke.EVs/4))*wildPoke.level/100)+wildPoke.level+10;
+                var hpCurr = wildPoke.hp;
+                var rate = wildPoke.catchrate;
+                var bonusBall = item.catchrate;
+                var bonusStatus = helper.getStatusMult(wildPoke);
+                var a = ((3 * hpMax - 2 * hpCurr) * rate * bonusBall * bonusStatus)/(3 * hpMax);
+                var b = Math.floor(1048560 / Math.floor(Math.sqrt(Math.floor(Math.sqrt(Math.floor(16711680/a))))));
+                
+                
+                
+                var rand;
+                var shake;
+                for(shake = 0; shake<4;shake++){
+                    rand = helper.generateRandomInt(0, 65535);
+                    if(b >= rand){
+                        break;
+                    }
+                    //play pokeball shake sound effect!
+                }
+                if(a >= 255 || shake == 3){
+                    //pokemon is caught
+                    response += "Gotcha! " + wildPoke.name + " was caught!";
+                    //if party is full, add to PC, else add to party
+                } else {
+                    //pokemon was not caught
+                    //switch between different responses like "argh so close!"
+                    
+                    //wild poke attacks
+                }
+                
+                
+                
             } else {
                 response = "You can't use a Pokéball on an trainer Pokemon! Please chose another item or go back!";
             }
@@ -1142,10 +1224,14 @@ var whiteOutHandlers = Alexa.CreateStateHandler(states.WHITEOUTMODE, {
             this.handler.state = states.MOVEMENTMODE;
         } else {
             //end up back at pokemon center
-            //should movement state go back one?
-            this.attributes['movementState']--;
+            //battle is over
+            this.attributes['battle'] = null;
+            this.attributes['opponent'] = undefined;
+            this.attributes['oppParty'] = undefined;
+            
             this.handler.state = states.POKECENTERMODE;
-            response = "Welcome to the Pokemon Center! Would you like me to heal your Pokemon back to perfect health?";
+            this.attributes['location'] = this.attributes['lastVisitedCity'];
+            response = "You were transported back to " + this.attributes['lastVisitedCity'].name + ". Welcome to the Pokemon Center! Would you like me to heal your Pokemon back to perfect health?";
         }
         this.emit(':ask', response, response);
     },
@@ -1174,9 +1260,22 @@ var whiteOutHandlers = Alexa.CreateStateHandler(states.WHITEOUTMODE, {
 var battleOverHandlers = Alexa.CreateStateHandler(states.BATTLEOVERMODE, {
 
     'YesIntent': function () {
+        //maybe have the trainer do a speech here...
+        
+        //what is the purpose of this state?
+        
+        
+        var response = "Ok say yes to continue ";
+        if(this.attributes['battle'] != "first"){
+            response += "on " + this.attributes['location'] + " or say train if you would like to stay here and keep training. ";
+        } else {
+            response += " onto route one! There are lots of Pokemon and trainers awaiting!";
+        }
         this.attributes['battle'] = null;
         this.attributes['opponent'] = undefined;
         this.attributes['oppParty'] = undefined;
+        this.handler.state = states.MOVEMENTMODE;
+        this.emit(':ask', response, response);
     },
     'AMAZON.HelpIntent': function () {
         this.emit(':ask', unhandledGeneral, unhandledGeneral);
@@ -1231,6 +1330,7 @@ var pokeCenterHandlers = Alexa.CreateStateHandler(states.POKECENTERMODE, {
         var party = this.attributes['party'];
         var rivalName = this.attributes['rivalName'];
         var rivalStarter = this.attributes['oppParty'][0];
+        this.attributes['lastVisitedCity'] = this.attributes['location'];
         var response = "Okay, I'll take your Pokemon for a few seconds. <audio src='https://s3.amazonaws.com/colinmosher/pokecenter.mp3'/> Thank you for waiting. We've restored your Pokemon to full health. We hope to see you again! Where would you like to go now? You can say go back to the city, leave, open the PC, or heal your pokemon again.";
         helper.healTeam(party);
 
@@ -1561,6 +1661,7 @@ var helper = {
             'stats':{
             },
             'EVs': 0,
+            'status': null
         }
 
         poke.level = starter ? 5 : helper.generateRandomInt(Math.max(this.attributes['movementState']*2/3-2, 1), Math.min(this.attributes['movementState']*2/3+2, 100));
@@ -1758,7 +1859,7 @@ var helper = {
     },
     //checks to see if POKE has fainted, playerName owns it
     //playerName should always be the Alexa player, oppName should always be opponent's name, etc., but poke is the poke to check if fainted
-    isFainted: function(playerName, oppName, party, oppParty, poke, second) {
+    isFainted: function(playerName, oppName, party, oppParty, poke, second, gym) {
         var response = "";
         var healthyArr;
         var playerPoke = party[0];
@@ -1791,7 +1892,6 @@ var helper = {
                 explvl = helper.addExperience(playerPoke, opp);
                 response += playerName + " defeated wild " + poke.name + "! " + playerPoke.name + " gained " + explvl[0] + " experience. ";
                 response += explvl[1] ? playerPoke.name + " went up to level " + playerPoke.level + "! " : "";
-                response += battleOverMessage;
                 helper.endBattle(party);
                 state = states.BATTLEOVERMODE;
             } else {
@@ -1821,9 +1921,6 @@ var helper = {
                     //Trainer should be able to make witty response!
 
 
-
-                    response += battleOverMessage;
-
                     state = states.BATTLEOVERMODE;
                 }
             }
@@ -1831,6 +1928,20 @@ var helper = {
             response += second ? "What would you like to do next? Please say let's fight, switch Pokemon, open bag, or run away." : "";
             state = states.BATTLEMODE;
         }
+        if(state == states.BATTLEOVERMODE){
+            //if regular trainer, go back to movementmode, if gym battle, go back to city mode, else who knows
+            //also add to response!!
+            if(gym){
+                state = states.CITYMODE;
+                response += "You exit the gym and look around the city. ";
+            } else {
+                state = states.MOVEMENTMODE;
+                response += "You start walking along the route again. Would you like to continue to the next area? Or say train to keep training. ";
+            }
+        }
+        
+        
+        
         return {'fainted': fainted, 'response': response, 'state': state, 'money': money};
     },
     calcStatusEffect: function(poke, opp, move) {
@@ -1901,6 +2012,22 @@ var helper = {
         }
 
         return string + mod;
+    },
+    getStatusMult: function(poke){
+        switch(poke.status){
+            case 'sleep':
+            case 'freeze':
+                return 2;
+                break;
+            case 'paralyze':
+            case 'poison':
+            case 'burn':
+                return 1.5;
+                break;
+            default:
+                return 1;
+                break;
+                          }
     },
     calcCrit: function() {
         return Math.random() <= .0625 ? 2 : 1;
