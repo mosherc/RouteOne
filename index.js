@@ -619,7 +619,7 @@ var askMovementHandlers = Alexa.CreateStateHandler(states.MOVEMENTMODE, {
             this.attributes['movementState']++;
         }
         else if(movementState == 1){
-            response = "Oak stops you and says, <break/> Hey! Wait! Don't go out! It's unsafe! Wild Pokemon live in tall grass! You need your own Pokemon for your protection. I know! Here, come with me! <break/> You follow Oak to the lab. <break/> " + rivalName + " says, Gramps! I'm fed up with waiting! <break/> Oak responds, " + rivalName + "? Let me think… Oh, that's right, I told you to come! Just wait! Here, " + playerName + "! There are three Pokémon here. Haha! The Pokémon are held inside these Pokéballs. When I was young, I was a serious Pokémon Trainer. But now, in my old age, I have only these three left. You can have one. Go on, choose! " + rivalName + " blurts, Hey! Gramps! No fair! What about me? Oak retorts, Be patient! " + rivalName + ". You can have one too! <break/> Do you choose Bulbasaur, the grass Pokemon, Charmander, the fire Pokemon, or Squirtle, the water Pokemon?";
+            response = "Oak stops you and says, <break/> Hey! Wait! Don't go out! It's unsafe! Wild Pokemon live in tall grass! You need your own Pokemon for your protection. I know! Come with me! <break/> You follow Oak to the lab. <break/> " + rivalName + " says, Gramps! I'm fed up with waiting! <break/> Oak responds, " + rivalName + "? Let me think… Oh, that's right, I told you to come! Here, " + playerName + "! There are three Pokémon here. Haha! The Pokémon are held inside these Pokéballs. You can have one. Go on, choose! " + rivalName + " blurts, Hey! Gramps! No fair! What about me? Oak retorts, Be patient " + rivalName + "! Do you choose Bulbasaur, the grass Pokemon, Charmander, the fire Pokemon, or Squirtle, the water Pokemon?";
             reprompt = "Come on, choose a Pokemon already.";
             this.handler.state = states.CHOOSEPOKEMONMODE;
             this.attributes['movementState']++;
@@ -788,7 +788,7 @@ var askPokemonHandlers = Alexa.CreateStateHandler(states.CHOOSEPOKEMONMODE, {
 
 
             this.handler.state = states.BATTLEMODE;
-            this.emit(':ask', playerName + " received the " + starter.name + " from Professor Oak! Your rival walks over to the " + rivalStarter.name + " and says, I'll take this one then! " + rivalName + " received the " + rivalStarter.name + " from Professor Oak! Oak says, if a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town. " + rivalName + " stops you and says, Wait, " + playerName + "! Let's check out our Pokemon! Come on, I'll take you on! <audio src='https://s3.amazonaws.com/colinmosher/rivalappears.mp3'/>... Rival " + rivalName + " would like to battle! Rival " + rivalName + " sent out " + rivalStarter.name + "! Go! " + starter.name + "! Oak interjects saying, Oh for Pete's sake...So pushy as always. " + rivalName + ". You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. Anyway, you'll learn more from experience. What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.", "What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.");
+            this.emit(':ask', "<audio src='https://s3.amazonaws.com/colinmosher/pokemon-caught-48.mp3'/>" + playerName + " received the " + starter.name + " from Professor Oak! Your rival walks over to the " + rivalStarter.name + " and says, I'll take this one then! " + rivalName + " received the " + rivalStarter.name + " from Professor Oak! Oak says, if a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town. " + rivalName + " stops you and says, Wait, " + playerName + "! Let's check out our Pokemon! Come on, I'll take you on! <audio src='https://s3.amazonaws.com/colinmosher/rival-appears-48.mp3'/>... Rival " + rivalName + " would like to battle! Rival " + rivalName + " sent out " + rivalStarter.name + "! Go! " + starter.name + "! Oak interjects saying, Oh for Pete's sake...So pushy as always. " + rivalName + ". You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. Anyway, you'll learn more from experience. What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.", "What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.");
             //https://www.dropbox.com/s/8q9teg6m7eyrjgs/rivalappears.mp3
         }
         else {
@@ -1098,21 +1098,51 @@ var bagHandlers = Alexa.CreateStateHandler(states.BAGMODE, {
         var item = this.event.request.intent.slots.Item.value;
         var poke = this.event.request.intent.slots.Pokemon.value;
         var playerName = this.attributes['playerName'];
-        item = items[item];
-        var wildPoke = this.attributes['oppParty']
+        var wildPoke = this.attributes['oppParty'];
+        var party = this.attributes['party'];
+        var pokeIndex;
+        var hasPoke = false;
+        
+        for(pokeIndex = 0; pokeIndex < party.length; pokeIndex++){
+            if(party[pokeIndex].name == poke){
+                hasPoke = true;
+                break;
+            }
+        }
+        var poke = party[pokeIndex];
+        
+        //need to check if this item exists
+        if(typeof itmes[item] == "undefined"){
+            response += "That is not a valid item. Please repeat your choice.";
+            this.emit(':ask', response, response);
+        } else {
+            item = items[item];
+        }
+        //need to check if pokemon is in the party
+        if(!hasPoke){
+            response += "That is not a valid Pokemon. Please repeat your choice.";
+            this.emit(':ask', response, response);
+        }
         
         response += playerName + " used " + item.name + "! "
 
         if(this.attributes['battle'] == null) {
             //we are in peaceful state
             //use item, can't use ball though
-
+            if(item.type == 'ball'){
+                response += "Can't use a Pokieball here! Please select a different item or go back.";
+            } else if (item.type == 'healing'){
+                poke.hp = Math.min(poke.hp+item.hp, helper.getMaxHp(poke));
+            } else if (item.type == 'restore'){
+                poke.hp = Math.min(poke.hp+item.hp, helper.getMaxHp(poke));
+                poke.status = null;
+            }
             this.handler.state = this.attributes['prevState'];
             this.attributes['prevState'] = null;
-        } else if(item.type = "ball"){
+        } else if(item.type == "ball"){
             if(this.attributes['battle'] == "wild" && wildPoke != null) {
                 //do the pokeball stuff here
-                var hpMax = Math.floor((2*Pokemon[wildPoke.name].base.hp+wildPoke.IVs.hp+Math.floor(wildPoke.EVs/4))*wildPoke.level/100)+wildPoke.level+10;
+                var hpMax = helper.getMaxHp(wildPoke);
                 var hpCurr = wildPoke.hp;
                 var rate = wildPoke.catchrate;
                 var bonusBall = item.catchrate;
@@ -1130,15 +1160,29 @@ var bagHandlers = Alexa.CreateStateHandler(states.BAGMODE, {
                         break;
                     }
                     //play pokeball shake sound effect!
+                    response += shake < 4 ? "<audio src='https://s3.amazonaws.com/colinmosher/pokeball-shake-48.mp3'/><break time='1s'/>" : "<break time='1s'/><audio src='https://s3.amazonaws.com/colinmosher/pokemon-caught-48.mp3'/>";
                 }
-                if(a >= 255 || shake == 3){
+                if(a >= 255 || shake == 4){
                     //pokemon is caught
                     response += "Gotcha! " + wildPoke.name + " was caught!";
                     //if party is full, add to PC, else add to party
                 } else {
                     //pokemon was not caught
                     //switch between different responses like "argh so close!"
-                    
+                    switch(shake){
+                        case 0:
+                            response += "Oh, no! The Pokemon broke free!";
+                            break;
+                        case 1:
+                            response += "Aww! It appeared to be caught!";
+                            break;
+                        case 2:
+                            response += "Aargh! Almost had it!";
+                            break;
+                        case 3:
+                            response += "Shoot! It was so close too!";
+                            break;
+                    }
                     //wild poke attacks
                 }
                 
@@ -1149,7 +1193,12 @@ var bagHandlers = Alexa.CreateStateHandler(states.BAGMODE, {
             }
         } else {
             //use item first
-
+            if (item.type == 'healing'){
+                poke.hp = Math.min(poke.hp+item.hp, helper.getMaxHp(poke));
+            } else if (item.type == 'restore'){
+                poke.hp = Math.min(poke.hp+item.hp, helper.getMaxHp(poke));
+                poke.status = null;
+            }
 
             //opponent attacks
 
@@ -2057,9 +2106,13 @@ var helper = {
     },
     hasItem: function(bag, item) {
         for(var itemI = 0; itemI < bag.length; itemI++){
-            if(bag[itemI].)
+            //TODO
+            //if(bag[itemI].count)
         }
-    }
+    },
+    getMaxHp: function(poke) {
+        return Math.floor((2*Pokemon[poke.name].base.hp+poke.IVs.hp+Math.floor(poke.EVs/4))*poke.level/100)+poke.level+10;
+    },
     randomAction: function(location) {
         var probNothingHappens = 60;
         var range = location.trainers + location.grass + location.items.length + probNothingHappens;
