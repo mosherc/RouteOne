@@ -15,7 +15,6 @@ var states = {
     SWITCHPOKEMODE: '_SWITCHPOKEMODE',
     BAGMODE: '_BAGMODE',
     WHITEOUTMODE: '_WHITEOUTMODE',
-    BATTLEOVERMODE: '_BATTLEOVERMODE',
     RUNAWAYMODE: '_RUNAWAYMODE',
     POKECENTERMODE: '_POKECENTERMODE',
     POKEMARTMODE: '_POKEMARTMODE',
@@ -266,7 +265,7 @@ var items = {
         type: 'ball',
         catchrate: 255
     }
-}
+};
 
 //Pokemon constants only
 var Pokemon = {
@@ -463,7 +462,6 @@ exports.handler = function (event, context, callback) {
         bagHandlers,
         runAwayHandlers,
         whiteOutHandlers,
-        battleOverHandlers,
         pokeCenterHandlers,
         pokeMartHandlers,
         cityHandlers,
@@ -1098,10 +1096,13 @@ var bagHandlers = Alexa.CreateStateHandler(states.BAGMODE, {
         var item = this.event.request.intent.slots.Item.value;
         var poke = this.event.request.intent.slots.Pokemon.value;
         var playerName = this.attributes['playerName'];
-        var wildPoke = this.attributes['oppParty'];
+        var oppParty = this.attributes['oppParty'];
+        var opp = oppParty[0];
+        var oppName = this.attributes['opponent']; 
         var party = this.attributes['party'];
         var pokeIndex;
         var hasPoke = false;
+        var gym = false;
         
         for(pokeIndex = 0; pokeIndex < party.length; pokeIndex++){
             if(party[pokeIndex].name == poke){
@@ -1110,6 +1111,10 @@ var bagHandlers = Alexa.CreateStateHandler(states.BAGMODE, {
             }
         }
         var poke = party[pokeIndex];
+        
+        if(this.attributes['battle'] == "gym"){
+            gym = true;
+        }
         
         //need to check if this item exists
         if(typeof itmes[item] == "undefined"){
@@ -1123,6 +1128,10 @@ var bagHandlers = Alexa.CreateStateHandler(states.BAGMODE, {
             response += "That is not a valid Pokemon. Please repeat your choice.";
             this.emit(':ask', response, response);
         }
+        if(item.count < 1){
+            response += "You do not have any of this item left! Please say another item.";
+            this.emit(':ask', response, response);
+        }
         
         response += playerName + " used " + item.name + "! "
 
@@ -1132,25 +1141,26 @@ var bagHandlers = Alexa.CreateStateHandler(states.BAGMODE, {
             if(item.type == 'ball'){
                 response += "Can't use a Pokieball here! Please select a different item or go back.";
             } else if (item.type == 'healing'){
+                item.count--;
                 poke.hp = Math.min(poke.hp+item.hp, helper.getMaxHp(poke));
             } else if (item.type == 'restore'){
+                item.count--;
                 poke.hp = Math.min(poke.hp+item.hp, helper.getMaxHp(poke));
                 poke.status = null;
             }
             this.handler.state = this.attributes['prevState'];
             this.attributes['prevState'] = null;
         } else if(item.type == "ball"){
-            if(this.attributes['battle'] == "wild" && wildPoke != null) {
+            if(this.attributes['battle'] == "wild" && opp != null) {
+                item.count--;
                 //do the pokeball stuff here
-                var hpMax = helper.getMaxHp(wildPoke);
-                var hpCurr = wildPoke.hp;
-                var rate = wildPoke.catchrate;
+                var hpMax = helper.getMaxHp(opp);
+                var hpCurr = opp.hp;
+                var rate = opp.catchrate;
                 var bonusBall = item.catchrate;
-                var bonusStatus = helper.getStatusMult(wildPoke);
+                var bonusStatus = helper.getStatusMult(opp);
                 var a = ((3 * hpMax - 2 * hpCurr) * rate * bonusBall * bonusStatus)/(3 * hpMax);
                 var b = Math.floor(1048560 / Math.floor(Math.sqrt(Math.floor(Math.sqrt(Math.floor(16711680/a))))));
-                
-                
                 
                 var rand;
                 var shake;
@@ -1164,7 +1174,7 @@ var bagHandlers = Alexa.CreateStateHandler(states.BAGMODE, {
                 }
                 if(a >= 255 || shake == 4){
                     //pokemon is caught
-                    response += "Gotcha! " + wildPoke.name + " was caught!";
+                    response += "Gotcha! " + opp.name + " was caught!";
                     //if party is full, add to PC, else add to party
                 } else {
                     //pokemon was not caught
@@ -1184,14 +1194,18 @@ var bagHandlers = Alexa.CreateStateHandler(states.BAGMODE, {
                             break;
                     }
                     //wild poke attacks
+                    var oppMove = opp.learnset[helper.generateRandomInt(0,opp.learnset.length-1)];
+                    response += helper.attack(opp, poke, oppMove);
+                    var faintRes = helper.isFainted(playerName, oppName, party, oppParty, poke, true, gym);
+                    this.handler.state = faintRes.state;
+                    response += faintRes.response;
                 }
-                
-                
                 
             } else {
                 response = "You can't use a Pokéball on an trainer Pokemon! Please chose another item or go back!";
             }
         } else {
+            item.count--;
             //use item first
             if (item.type == 'healing'){
                 poke.hp = Math.min(poke.hp+item.hp, helper.getMaxHp(poke));
@@ -1199,12 +1213,15 @@ var bagHandlers = Alexa.CreateStateHandler(states.BAGMODE, {
                 poke.hp = Math.min(poke.hp+item.hp, helper.getMaxHp(poke));
                 poke.status = null;
             }
-
+            
             //opponent attacks
-
-
-
-            this.handler.state = states.BATTLEMODE;
+            var oppMove = opp.learnset[helper.generateRandomInt(0,opp.learnset.length-1)];
+            response += helper.attack(opp, poke, oppMove);
+            var faintRes = helper.isFainted(playerName, oppName, party, oppParty, poke, true, gym);
+            this.handler.state = faintRes.state;
+            response += faintRes.response;
+            
+            
         }
         this.emit(':ask', response, response);
     },
@@ -1306,48 +1323,6 @@ var whiteOutHandlers = Alexa.CreateStateHandler(states.WHITEOUTMODE, {
     }
 });
 
-var battleOverHandlers = Alexa.CreateStateHandler(states.BATTLEOVERMODE, {
-
-    'YesIntent': function () {
-        //maybe have the trainer do a speech here...
-        
-        //what is the purpose of this state?
-        
-        
-        var response = "Ok say yes to continue ";
-        if(this.attributes['battle'] != "first"){
-            response += "on " + this.attributes['location'] + " or say train if you would like to stay here and keep training. ";
-        } else {
-            response += " onto route one! There are lots of Pokemon and trainers awaiting!";
-        }
-        this.attributes['battle'] = null;
-        this.attributes['opponent'] = undefined;
-        this.attributes['oppParty'] = undefined;
-        this.handler.state = states.MOVEMENTMODE;
-        this.emit(':ask', response, response);
-    },
-    'AMAZON.HelpIntent': function () {
-        this.emit(':ask', unhandledGeneral, unhandledGeneral);
-    },
-    'AMAZON.StopIntent': function () {
-        this.emit(':tell', this.attributes['goodbyeMessage']);
-    },
-    'AMAZON.CancelIntent': function () {
-        this.emit(':tell', this.attributes['goodbyeMessage']);
-    },
-    'AMAZON.StartOverIntent': function () {
-        // reset the game state to start mode
-        this.handler.state = states.STARTMODE;
-        this.emit(':ask', welcomeMessage, repeatWelcomeMessage);
-    },
-    'BicycleIntent': function () {
-        this.emit(':ask', bicycleMessage);
-    },
-    'Unhandled': function () {
-        this.emit(':ask', unhandledGeneral, unhandledGeneral);
-    }
-});
-
 var runAwayHandlers = Alexa.CreateStateHandler(states.RUNAWAYMODE, {
 
     'AMAZON.HelpIntent': function () {
@@ -1397,7 +1372,6 @@ var pokeCenterHandlers = Alexa.CreateStateHandler(states.POKECENTERMODE, {
         var currCity = this.attributes['location'];
         var response = "We hope to see you again! You leave the PokieCenter and now you're back in " + currCity + ". ";
         response += helper.getCityActivities(currCity);
-        //need to build the rest of the response based on what there is to do in the city...
         this.handler.state = states.CITYMODE;
         this.emit(':ask', response, response);
     },
@@ -1530,7 +1504,6 @@ var pokeMartHandlers = Alexa.CreateStateHandler(states.POKEMARTMODE, {
         var currCity = this.attributes['location'];
         var response = "Goodbye! You leave the PokieMart and now you're back in " + currCity + ". ";
         response += helper.getCityActivities(currCity);
-        //need to build the rest of the response based on what there is to do in the city...
         this.handler.state = states.CITYMODE;
         this.emit(':ask', response, response);
     },
@@ -1661,28 +1634,150 @@ var askQuestionHandlers = Alexa.CreateStateHandler(states.ASKMODE, {
 
 var helper = {
 
-    switchPokemon: function(party, p1, p2) {
-        //switching by index
-        var a = party[p1];
-        party[p1] = party[p2];
-        party[p2] = a;
+    addExperience: function(poke, opp) {
+        var a = opp.wild == true ? 1 : 1.5;
+        var base = Pokemon[poke.name].base;
+        var b = (base.spdef + base.spatk + base.def + base.atk + base.speed + base.hp)/6;
+        var L = opp.level;
+        var exp = Math.floor(a*b*L/(7));
+        poke.exp = +poke.exp+exp;
+        var leveledUp = helper.checkLevelUp(poke)
+        return [exp, leveledUp];
     },
-    generateRandomInt: function(min, max){
-        min = Math.ceil(min);
-        max = Math.floor(max);
-        return Math.floor(Math.random() * (max-min+1)) + min;
-    },
-    generateRandomPoke: function(location) {
-        var pokeOnRoute = Object.keys(location.pokemon);
-        var rand = Math.random()*100;
-        var comparison = 0;
-        pokeOnRoute.forEach(function(poke) {
-            comparison += location.pokemon[poke];
-            if(rand < comparison){
-                return helper.generatePokemon(poke, true, "wild");
+    attack: function(poke, opp, move){
+        var response = "";
+        var damage;
+        var crit;
+        var acc;
+        response += poke.OT + "'s " + poke.name + " used " + move.name + "! ";
+        if(move.cat == "physical" || move.cat == "special"){
+            crit = helper.calcCrit();
+            damage = helper.calcDamage(poke, opp, move, crit);
+            if(damage > -1){
+                response += (crit == 2 && helper.calcEffectivity(move, opp) > 0) ? "A critical hit! " : "";
+                response += helper.getEffectivity(helper.calcEffectivity(move, opp));
+                response += poke.OT + "'s " + poke.name + " did " + damage + " H P of damage to " + opp.OT + "'s " + opp.name + ". ";
+            } else {
+                //attack missed
+                response += poke.name + "'s attack missed! ";
+            }
+        } else {
+            response += helper.calcStatusEffect(poke, opp, move);
+        }
+        for(var moveIndex = 0; moveIndex < poke.learnset.length; moveIndex++){
+            if(poke.learnset[moveIndex].name == move.name){
+                poke.learnset[moveIndex].pp--;
                 break;
             }
+        }
+        return response;
+    },
+    battleSetup: function(context, player, opponent, battleType, oppParty) {
+//        context.attributes['battle'] = battleType;
+//        context.attributes['opponent'] = opponent;
+//        context.attributes['oppParty'] = oppParty; //need to generateParty(...) if not defined
+    },
+    calcCrit: function() {
+        return Math.random() <= .0625 ? 2 : 1;
+    },
+    //poke is attacker, opp is defender, move is move object
+    calcDamage: function(poke, opp, move, crit) {
+        var modifier = crit * helper.calcRandDamage() * helper.calcSTAB(poke, move) * helper.calcEffectivity(move, opp);
+        //I should be able to say if it is critical!
+        if(move.cat != "status"){
+            var rand = Math.random()*100;
+            if(rand < move.acc){
+                //move hits
+                var atk = move.cat == "physical" ? poke.stats.atk : poke.stats.spatk;
+                var def = move.cat == "physical" ? opp.stats.def : opp.stats.spdef;
+                var damage = Math.floor(((2*poke.level/5+2)*move.power*atk/def*(1/50)+2) * modifier);
+                opp.hp -= Math.max(1, damage);
+                return Math.max(1, damage);
+            } else {
+                //move misses
+                return -1;
+            }
+        }
+    },
+    calcEffectivity: function(move, opp){
+        var mult = 1;
+        opp.types.forEach(function(type){
+            if(type != ""){
+                mult *= typeChart[move.type][type];
+            }
         });
+        return mult;
+    },
+    calcRandDamage: function() {
+        return 1 - Math.random()*.15;
+    },
+    calcSTAB: function(poke, move) {
+        return (move.type == poke.types[0] || move.type == poke.types[1]) ? 1.5 : 1;
+    },
+    calcStatusEffect: function(poke, opp, move) {
+        if (typeof Object.keys(move.modifier) !== 'undefined' && Object.keys(move.modifier).length > 0) {
+            var stat = Object.keys(move.modifier)[1];
+        }
+        var response;
+        if(move.modifier.self){
+            if(poke.modifiers[stat] < 6 || poke.modifiers[stat] > -6){
+                poke.modifiers[stat] += move.modifier[stat];
+                poke.stats[stat] = modifiers[poke.modifiers[stat]] * Math.floor((Math.floor((2*Pokemon[poke.name].base[stat]+poke.IVs[stat]+Math.floor(poke.EVs/4))*poke.level)/100)+5);
+                response = helper.getStatusEffect(poke, stat, move.modifier);
+            } else if(poke.modifiers[stat] >= 6) {
+                response = poke.name + "'s " + stat + " won't go higher! ";
+            } else if(poke.modifiers[stat] <= -6) {
+                response = poke.name + "'s " + stat + " won't go lower! ";
+            }
+        } else {
+            if(opp.modifiers[stat] < 6 || opp.modifiers[stat] > -6){
+                opp.modifiers[stat] += move.modifier[stat];
+                opp.stats[stat] = modifiers[opp.modifiers[stat]] * Math.floor((Math.floor((2*Pokemon[opp.name].base[stat]+opp.IVs[stat]+Math.floor(opp.EVs/4))*opp.level)/100)+5);
+                response = helper.getStatusEffect(opp, stat, move.modifier)
+            } else if(opp.modifiers[stat] >= 6) {
+                response = opp.name + "'s " + stat + " won't go higher! ";
+            } else if(opp.modifiers[stat] <= -6) {
+                response = opp.name + "'s " + stat + " won't go lower! ";
+            }
+        }
+        //should return string?
+        return response;
+    },
+    checkLevelUp: function(poke) {
+        var levelUp = false;
+        var level = Math.floor(helper.nthroot(poke.exp, 3));
+        if(level > poke.level){
+            poke.level++;
+            levelUp = true;
+        }
+        return levelUp;
+    },
+    endBattle: function(party){
+        //don't reset health
+        //don't reset pp
+        var moneyMult = 0;
+        //reset stat modifiers and stats for each pokemon
+        party.forEach(function(poke) {
+            helper.resetStats(poke);
+            moneyMult += poke.level;
+        });
+        //reset battle setup for opponent
+
+        //add money!
+        var money = Math.round(Math.random() * 25 * moneyMult + 30 * moneyMult);
+
+
+        return money;
+    },
+    generateParty: function(OT){
+        var size = helper.generateRandomInt(1,6);
+        var party = []
+        for(var i = 1; i <= size; i++){
+            //should probably generate pokemon not completely randomly
+            //generated party should only generate pokemon that can be at that level (ie current level less than evolution's level)
+            var randPoke = helper.generatePokemon(pokedex[helper.generateRandomInt(0, pokedex.length-1)], false, OT);
+            party.push(randPoke);
+        }
     },
     //name is official name of pokemon, starter is boolean true if pokemon is a starter (level 5) wild is boolean for wild (true) or not (false)
     generatePokemon: function(name, starter, OT) {
@@ -1727,8 +1822,6 @@ var helper = {
         if(Object.keys(poke.learnset).length > 4){
             poke.learnset = helper.getRandomSubarray(poke.learnset, 4);
         }
-
-
         function returnStat(stat) {
             stat = Math.floor(Math.floor((2*Pokemon[name].base[stat]+poke.IVs[stat]+Math.floor(poke.EVs/4))*poke.level/100)+5);
             return stat;
@@ -1741,125 +1834,38 @@ var helper = {
 
         return poke;
     },
-    generateParty: function(OT){
-        var size = helper.generateRandomInt(1,6);
-        var party = []
-        for(var i = 1; i <= size; i++){
-            //should probably generate pokemon not completely randomly
-            //generated party should only generate pokemon that can be at that level (ie current level less than evolution's level)
-            var randPoke = helper.generatePokemon(pokedex[helper.generateRandomInt(0, pokedex.length-1)], false, OT);
-            party.push(randPoke);
-        }
+    generateRandomInt: function(min, max){
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max-min+1)) + min;
     },
-    battleSetup: function(context, player, opponent, battleType, oppParty) {
-//        context.attributes['battle'] = battleType;
-//        context.attributes['opponent'] = opponent;
-//        context.attributes['oppParty'] = oppParty; //need to generateParty(...) if not defined
-    },
-    endBattle: function(party){
-        //don't reset health
-        //don't reset pp
-        var moneyMult = 0;
-
-        //reset stat modifiers and stats for each pokemon
-        party.forEach(function(poke) {
-            helper.resetStats(poke);
-            moneyMult += poke.level;
-        });
-
-        //heal rival pokemon?
-        //reset battle setup for opponent
-
-        //maybe add money!
-        var money = Math.round(Math.random() * 25 * moneyMult + 30 * moneyMult);
-
-
-        return money;
-    },
-    healTeam: function(party) {;
-        party.forEach(function(poke) {
-            helper.heal(poke);
-        })
-    },
-    heal: function(poke) {
-        poke.hp = Math.floor((2*Pokemon[poke.name].base.hp+poke.IVs.hp+Math.floor(poke.EVs/4))*poke.level/100)+poke.level+10;
-        poke.learnset.forEach(function(move) {
-            move.pp = attacks[move.name].pp;
-        })
-
-        //reset status such as sleep or paralysis
-    },
-    attack: function(poke, opp, move){
-        var response = "";
-        var damage;
-        var crit;
-        var acc;
-        response += poke.OT + "'s " + poke.name + " used " + move.name + "! ";
-        if(move.cat == "physical" || move.cat == "special"){
-            crit = helper.calcCrit();
-            damage = helper.calcDamage(poke, opp, move, crit);
-            if(damage > -1){
-                response += (crit == 2 && helper.calcEffectivity(move, opp) > 0) ? "A critical hit! " : "";
-                response += helper.getEffectivity(helper.calcEffectivity(move, opp));
-                response += poke.OT + "'s " + poke.name + " did " + damage + " H P of damage to " + opp.OT + "'s " + opp.name + ". ";
-            } else {
-                //attack missed
-                response += poke.name + "'s attack missed! ";
-            }
-        } else {
-            response += helper.calcStatusEffect(poke, opp, move);
-        }
-        for(var moveIndex = 0; moveIndex < poke.learnset.length; moveIndex++){
-            if(poke.learnset[moveIndex].name == move.name){
-                poke.learnset[moveIndex].pp--;
+    generateRandomPoke: function(location) {
+        var pokeOnRoute = Object.keys(location.pokemon);
+        var rand = Math.random()*100;
+        var comparison = 0;
+        pokeOnRoute.forEach(function(poke) {
+            comparison += location.pokemon[poke];
+            if(rand < comparison){
+                return helper.generatePokemon(poke, true, "wild");
                 break;
             }
-        }
-        return response;
-    },
-    resetStats: function(poke) {
-        poke.hp = Math.floor((2*Pokemon[poke.name].base.hp+poke.IVs.hp+Math.floor(poke.EVs/4))/100)+poke.level+10;
-        function returnStat(stat) {
-            stat = Math.floor(Math.floor((2*Pokemon[poke.name].base[stat]+poke.IVs[stat]+Math.floor(poke.EVs/4))*poke.level/100)+5);
-            return stat;
-        }
-        poke.stats.spdef = returnStat('spdef');
-        poke.stats.spatk = returnStat('spatk');
-        poke.stats.def = returnStat('def');
-        poke.stats.atk = returnStat('atk');
-        poke.stats.speed = returnStat('speed');
-
-        for(var mod in poke.modifiers) {
-            modifiers[mod] = 0;
-        }
-    },
-    addExperience: function(poke, opp) {
-        var a = opp.wild == true ? 1 : 1.5;
-        var base = Pokemon[poke.name].base;
-        var b = (base.spdef + base.spatk + base.def + base.atk + base.speed + base.hp)/6;
-        var L = opp.level;
-        var exp = Math.floor(a*b*L/(7));
-        poke.exp = +poke.exp+exp;
-        var leveledUp = helper.checkLevelUp(poke)
-        return [exp, leveledUp];
-    },
-    checkLevelUp: function(poke) {
-        var levelUp = false;
-        var level = Math.floor(helper.nthroot(poke.exp, 3));
-        if(level > poke.level){
-            poke.level++;
-            levelUp = true;
-        }
-        return levelUp;
-    },
-    calcEffectivity: function(move, opp){
-        var mult = 1;
-        opp.types.forEach(function(type){
-            if(type != ""){
-                mult *= typeChart[move.type][type];
-            }
         });
-        return mult;
+    },
+    getCityActivities: function (location) {
+        var response = "You can ";
+        var buildings = location.buildings;
+        for(var b = 0; b < buildings.length; b++){
+            if(b == 'pokemart'){
+                response += "go to the PokieMart,";
+            } else if(b == 'pokecenter') {
+                response += "go to the PokieCenter,";
+            } else if(b == 'gym'){
+                response += "go to the gym to battle the leader,";
+            }
+        }
+        response += buildings.length > 0 ? " or " : "";
+        response += "go to the next location, " + location.next + ". ";
+        return response;
     },
     getEffectivity: function(effectivity) {
         //need to reference type chart
@@ -1886,27 +1892,88 @@ var helper = {
         }
         return string;
     },
-    //poke is attacker, opp is defender, move is move object
-    calcDamage: function(poke, opp, move, crit) {
-        var modifier = crit * helper.calcRandDamage() * helper.calcSTAB(poke, move) * helper.calcEffectivity(move, opp);
-        //I should be able to say if it is critical!
-        if(move.cat != "status"){
-            var rand = Math.random()*100;
-            if(rand < move.acc){
-                //move hits
-                var atk = move.cat == "physical" ? poke.stats.atk : poke.stats.spatk;
-                var def = move.cat == "physical" ? opp.stats.def : opp.stats.spdef;
-                var damage = Math.floor(((2*poke.level/5+2)*move.power*atk/def*(1/50)+2) * modifier);
-                opp.hp -= Math.max(1, damage);
-                return Math.max(1, damage);
-            } else {
-                //move misses
-                return -1;
+    getHealthyParty: function(party) {
+        var healthyArr = [];
+        for(var i = 0; i < party.length; i++){
+            if(party[i].hp > 0){
+                healthyArr.push(party[i]);
             }
         }
-
+        return healthyArr;
     },
-    //checks to see if POKE has fainted, playerName owns it
+    getMaxHp: function(poke) {
+        return Math.floor((2*Pokemon[poke.name].base.hp+poke.IVs.hp+Math.floor(poke.EVs/4))*poke.level/100)+poke.level+10;
+    },
+    getRandomSubarray: function (arr, size) {
+        var shuffled = arr.slice(0), i = arr.length, temp, index;
+        while (i--) {
+            index = Math.floor((i + 1) * Math.random());
+            temp = shuffled[index];
+            shuffled[index] = shuffled[i];
+            shuffled[i] = temp;
+        }
+        return shuffled.slice(0, size);
+    },
+    getStatusEffect: function(poke, stat, modifier){
+        var string = poke.name + "'s " + stat + " ";
+        var mod = "";
+        switch(modifier[stat]){
+            case -2:
+            case "-2":
+                mod = "harshly fell! ";
+                break;
+            case -1:
+            case "-1":
+                mod = "fell! ";
+                break;
+            case 1:
+            case "1":
+                mod = "rose! ";
+                break;
+            case 2:
+            case "2":
+                mod = "sharply rose! ";
+                break;
+        }
+        return string + mod;
+    },
+    getStatusMult: function(poke){
+        switch(poke.status){
+            case 'sleep':
+            case 'freeze':
+                return 2;
+                break;
+            case 'paralyze':
+            case 'poison':
+            case 'burn':
+                return 1.5;
+                break;
+            default:
+                return 1;
+                break;
+        }
+    },
+    hasMove: function(poke, chosenMove, moveset) {
+        for(var moveIndex = 0; moveIndex < poke.learnset.length; moveIndex++){
+            if(chosenMove == moveset[moveIndex].name){
+                return moveIndex;
+            }
+        }
+        return -1;
+    },
+    healTeam: function(party) {;
+        party.forEach(function(poke) {
+            helper.heal(poke);
+        })
+    },
+    heal: function(poke) {
+        poke.hp = Math.floor((2*Pokemon[poke.name].base.hp+poke.IVs.hp+Math.floor(poke.EVs/4))*poke.level/100)+poke.level+10;
+        poke.learnset.forEach(function(move) {
+            move.pp = attacks[move.name].pp;
+        })
+        //reset status such as sleep or paralysis
+    },
+    //checks to see if POKE has fainted, either can own it
     //playerName should always be the Alexa player, oppName should always be opponent's name, etc., but poke is the poke to check if fainted
     isFainted: function(playerName, oppName, party, oppParty, poke, second, gym) {
         var response = "";
@@ -1917,6 +1984,9 @@ var helper = {
         var money = 0;
         var fainted = false;
         var state;
+        if(typeof gym === 'undefined'){
+            gym = false;
+        }
 
         if(poke.hp <= 0){
             fainted = true;
@@ -1961,7 +2031,6 @@ var helper = {
                     helper.switchPokemon(oppParty, 0, pokeIndex);
                     response += oppParty[0].OT + " sent out " + oppParty[0] + "! ";
                     response += "What would you like to do next? Please say let's fight, switch Pokemon, open bag, or run away.";
-
                 } else {
                     //opp has been defeated
                     money = helper.endBattle(party);
@@ -1988,130 +2057,20 @@ var helper = {
                 response += "You start walking along the route again. Would you like to continue to the next area? Or say train to keep training. ";
             }
         }
-        
-        
-        
         return {'fainted': fainted, 'response': response, 'state': state, 'money': money};
     },
-    calcStatusEffect: function(poke, opp, move) {
-        if (typeof Object.keys(move.modifier) !== 'undefined' && Object.keys(move.modifier).length > 0) {
-            var stat = Object.keys(move.modifier)[1];
-        }
-        var response;
-        if(move.modifier.self){
-            if(poke.modifiers[stat] < 6 || poke.modifiers[stat] > -6){
-                poke.modifiers[stat] += move.modifier[stat];
-                poke.stats[stat] = modifiers[poke.modifiers[stat]] * Math.floor((Math.floor((2*Pokemon[poke.name].base[stat]+poke.IVs[stat]+Math.floor(poke.EVs/4))*poke.level)/100)+5);
-                response = helper.getStatusEffect(poke, stat, move.modifier);
-            } else if(poke.modifiers[stat] >= 6) {
-                response = poke.name + "'s " + stat + " won't go higher! ";
-            } else if(poke.modifiers[stat] <= -6) {
-                response = poke.name + "'s " + stat + " won't go lower! ";
+    nthroot: function(x, n){
+        try {
+            var negate = n % 2 == 1 && x < 0;
+            if(negate) {
+                x = -x;
             }
-        } else {
-            if(opp.modifiers[stat] < 6 || opp.modifiers[stat] > -6){
-                opp.modifiers[stat] += move.modifier[stat];
-                opp.stats[stat] = modifiers[opp.modifiers[stat]] * Math.floor((Math.floor((2*Pokemon[opp.name].base[stat]+opp.IVs[stat]+Math.floor(opp.EVs/4))*opp.level)/100)+5);
-                response = helper.getStatusEffect(opp, stat, move.modifier)
-            } else if(opp.modifiers[stat] >= 6) {
-                response = opp.name + "'s " + stat + " won't go higher! ";
-            } else if(opp.modifiers[stat] <= -6) {
-                response = opp.name + "'s " + stat + " won't go lower! ";
+            var possible = Math.pow(x, 1 / n);
+            n = Math.pow(possible, n);
+            if(Math.abs(x - n) < 1 && (x > 0 == n > 0)) {
+                return negate ? -possible : possible;
             }
-        }
-        //should return string?
-        return response;
-    },
-    getCityActivities: function (location) {
-        var response = "You can ";
-        var buildings = location.buildings;
-        for(var b = 0; b < buildings.length; b++){
-            if(b == 'pokemart'){
-                response += "go to the PokieMart,";
-            } else if(b == 'pokecenter') {
-                response += "go to the PokieCenter,";
-            } else if(b == 'gym'){
-                response += "go to the gym to battle the leader,";
-            }
-        }
-        response += buildings.length > 0 ? " or " : "";
-        response += "go to the next location, " + location.next + ". ";
-        return response;
-    },
-    getStatusEffect: function(poke, stat, modifier){
-        var string = poke.name + "'s " + stat + " ";
-        var mod = "";
-        switch(modifier[stat]){
-            case -2:
-            case "-2":
-                mod = "harshly fell! ";
-                break;
-            case -1:
-            case "-1":
-                mod = "fell! ";
-                break;
-            case 1:
-            case "1":
-                mod = "rose! ";
-                break;
-            case 2:
-            case "2":
-                mod = "sharply rose! ";
-                break;
-        }
-
-        return string + mod;
-    },
-    getStatusMult: function(poke){
-        switch(poke.status){
-            case 'sleep':
-            case 'freeze':
-                return 2;
-                break;
-            case 'paralyze':
-            case 'poison':
-            case 'burn':
-                return 1.5;
-                break;
-            default:
-                return 1;
-                break;
-                          }
-    },
-    calcCrit: function() {
-        return Math.random() <= .0625 ? 2 : 1;
-    },
-    calcRandDamage: function() {
-        return 1 - Math.random()*.15;
-    },
-    getHealthyParty: function(party) {
-        var healthyArr = [];
-        for(var i = 0; i < party.length; i++){
-            if(party[i].hp > 0){
-                healthyArr.push(party[i]);
-            }
-        }
-        return healthyArr;
-    },
-    calcSTAB: function(poke, move) {
-        return (move.type == poke.types[0] || move.type == poke.types[1]) ? 1.5 : 1;
-    },
-    hasMove: function(poke, chosenMove, moveset) {
-        for(var moveIndex = 0; moveIndex < poke.learnset.length; moveIndex++){
-            if(chosenMove == moveset[moveIndex].name){
-                return moveIndex;
-            }
-        }
-        return -1;
-    },
-    hasItem: function(bag, item) {
-        for(var itemI = 0; itemI < bag.length; itemI++){
-            //TODO
-            //if(bag[itemI].count)
-        }
-    },
-    getMaxHp: function(poke) {
-        return Math.floor((2*Pokemon[poke.name].base.hp+poke.IVs.hp+Math.floor(poke.EVs/4))*poke.level/100)+poke.level+10;
+        } catch(e){}
     },
     randomAction: function(location) {
         var probNothingHappens = 60;
@@ -2127,27 +2086,26 @@ var helper = {
             return "";
         }
     },
-    nthroot: function(x, n){
-        try {
-            var negate = n % 2 == 1 && x < 0;
-            if(negate) {
-                x = -x;
-            }
-            var possible = Math.pow(x, 1 / n);
-            n = Math.pow(possible, n);
-            if(Math.abs(x - n) < 1 && (x > 0 == n > 0)) {
-                return negate ? -possible : possible;
-            }
-        } catch(e){}
-    },
-    getRandomSubarray: function (arr, size) {
-        var shuffled = arr.slice(0), i = arr.length, temp, index;
-        while (i--) {
-            index = Math.floor((i + 1) * Math.random());
-            temp = shuffled[index];
-            shuffled[index] = shuffled[i];
-            shuffled[i] = temp;
+    resetStats: function(poke) {
+        poke.hp = Math.floor((2*Pokemon[poke.name].base.hp+poke.IVs.hp+Math.floor(poke.EVs/4))/100)+poke.level+10;
+        function returnStat(stat) {
+            stat = Math.floor(Math.floor((2*Pokemon[poke.name].base[stat]+poke.IVs[stat]+Math.floor(poke.EVs/4))*poke.level/100)+5);
+            return stat;
         }
-        return shuffled.slice(0, size);
+        poke.stats.spdef = returnStat('spdef');
+        poke.stats.spatk = returnStat('spatk');
+        poke.stats.def = returnStat('def');
+        poke.stats.atk = returnStat('atk');
+        poke.stats.speed = returnStat('speed');
+
+        for(var mod in poke.modifiers) {
+            modifiers[mod] = 0;
+        }
+    },
+    switchPokemon: function(party, p1, p2) {
+        //switching by index
+        var a = party[p1];
+        party[p1] = party[p2];
+        party[p2] = a;
     }
 }
