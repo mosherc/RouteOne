@@ -595,7 +595,7 @@ var askRivalHandlers = Alexa.CreateStateHandler(states.RIVALMODE, {
 
 var askMovementHandlers = Alexa.CreateStateHandler(states.MOVEMENTMODE, {
 
-    'ContinueIntent': function(){
+    'AMAZON.YesIntent': function(){
         var playerName = this.attributes['playerName'];
         var rivalName = this.attributes['rivalName'];
         var movementState = this.attributes['movementState'];
@@ -660,16 +660,23 @@ var askMovementHandlers = Alexa.CreateStateHandler(states.MOVEMENTMODE, {
     'BagIntent': function () {
         var bag = this.attributes['bag'];
         var response = "";
-        if(bag.length == 0) {
+        var empty = true;
+        for(var item in bag){
+            if(item.count > 0){
+                empty = false;
+                break;
+            }
+        }
+        if(empty) {
             response = "Your bag is empty! Please choose another action.";
             this.emit(':ask', response, response);
         } else {
             var items;
-            for(var i = 0; i<bag.length; i++){
-                items += bag[i] + ", ";
+            for(var item in bag){
+                items += item.name + ", ";
             }
             response = "What would you like to use in your bag? You have the following items: " + items;
-            response += "Please say it in the form of 'use item on pokemon'";
+            response += ". Please say it in the form of 'use item on pokemon'.";
             //go to bag mode maybe
             this.attributes['prevState'] = this.handler.state;
             this.handler.state = states.BAGMODE;
@@ -769,18 +776,16 @@ var askPokemonHandlers = Alexa.CreateStateHandler(states.CHOOSEPOKEMONMODE, {
             } else {
                 rivalStarter = "eevee";
             }
-
-
             starter = helper.generatePokemon(starter, true, playerName);
             rivalStarter = helper.generatePokemon(rivalStarter, true, rivalName);
-
+            
             this.attributes['party'] = [starter];
             this.attributes['battle'] = "first"; //can also be "trainer" for trainer battle, or "wild" for wild battle
             this.attributes['opponent'] = rivalName;
             this.attributes['oppParty'] = [rivalStarter];
             //helper.battleSetup(this, playerName, rivalName, "first", [rivalStarter]);
-
-
+            
+            
             this.handler.state = states.BATTLEMODE;
             this.emit(':ask', "<audio src='https://s3.amazonaws.com/colinmosher/pokemon-caught-48.mp3'/>" + playerName + " received the " + starter.name + " from Professor Oak! Your rival walks over to the " + rivalStarter.name + " and says, I'll take this one then! " + rivalName + " received the " + rivalStarter.name + " from Professor Oak! Oak says, if a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town. " + rivalName + " stops you and says, Wait, " + playerName + "! Let's check out our Pokemon! Come on, I'll take you on! <audio src='https://s3.amazonaws.com/colinmosher/rival-appears-48.mp3'/>... Rival " + rivalName + " would like to battle! Rival " + rivalName + " sent out " + rivalStarter.name + "! Go! " + starter.name + "! Oak interjects saying, Oh for Pete's sake...So pushy as always. " + rivalName + ". You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. Anyway, you'll learn more from experience. What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.", "What will "+playerName+" do? You can say either let's fight, switch pokemon, open bag, or run away.");
             //https://www.dropbox.com/s/8q9teg6m7eyrjgs/rivalappears.mp3
@@ -856,18 +861,25 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLEMODE, {
     'BagIntent': function () {
         var bag = this.attributes['bag'];
         var response = "";
-        if(bag.length == 0) {
+        var empty = true;
+        for(var item in bag){
+            if(item.count > 0){
+                empty = false;
+                break;
+            }
+        }
+        if(empty) {
             response = "Your bag is empty! Please choose another action.";
             this.emit(':ask', response, response);
         } else {
             var items;
-            for(var i = 0; i<bag.length; i++){
-                items += bag[i] + ", ";
+            for(var item in bag){
+                items += item.name + ", ";
             }
             response = "What would you like to use in your bag? You have the following items: " + items;
-            response += "Please say it in the form of 'use item on pokemon'";
+            response += ". Please say it in the form of 'use item on pokemon'.";
             //go to bag mode maybe
-            // this.attributes['prevState'] = this.handler.state;
+            //this.attributes['prevState'] = this.handler.state;
             this.handler.state = states.BAGMODE;
             this.emit(':ask', response, response);
         }
@@ -1119,7 +1131,7 @@ var bagHandlers = Alexa.CreateStateHandler(states.BAGMODE, {
             for(pokeIndex = 0; pokeIndex < party.length; pokeIndex++){
                 if(party[pokeIndex].name == poke){
                     hasPoke = true;
-                    break;
+                    return;
                 }
             }
         }
@@ -1298,7 +1310,7 @@ var whiteOutHandlers = Alexa.CreateStateHandler(states.WHITEOUTMODE, {
             this.attributes['battle'] = null;
             this.attributes['opponent'] = undefined;
             this.attributes['oppParty'] = undefined;
-            response = rivalName " says, Yeah! Am I great or what! Oak says, hmm...how disappointing...If you win, you earn prize money, and your Pokemon grow. But if you lose, " + playerName + ", you end up paying prize money...However since you had no warning this time, I'll pay for you. But things won't be this way once you step out these doors. That's why you must strengthen your Pokemon by battling wild Pokemon. Your rival says, ok I'll make my Pokemon battle to toughen it up! " + playerName + "! Gramps! Smell ya later! What would you like to do now? Would you like to go to Route 1?";
+            response = rivalName + " says, Yeah! Am I great or what! Oak says, hmm...how disappointing...If you win, you earn prize money, and your Pokemon grow. But if you lose, " + playerName + ", you end up paying prize money...However since you had no warning this time, I'll pay for you. But things won't be this way once you step out these doors. That's why you must strengthen your Pokemon by battling wild Pokemon. Your rival says, ok I'll make my Pokemon battle to toughen it up! " + playerName + "! Gramps! Smell ya later! What would you like to do now? Would you like to go to Route 1?";
             helper.healTeam(party);
             this.handler.state = states.MOVEMENTMODE;
         } else {
@@ -1367,16 +1379,23 @@ var pokeCenterHandlers = Alexa.CreateStateHandler(states.POKECENTERMODE, {
     'BagIntent': function () {
         var bag = this.attributes['bag'];
         var response = "";
-        if(bag.length == 0) {
+        var empty = true;
+        for(var item in bag){
+            if(item.count > 0){
+                empty = false;
+                break;
+            }
+        }
+        if(empty) {
             response = "Your bag is empty! Please choose another action.";
             this.emit(':ask', response, response);
         } else {
             var items;
-            for(var i = 0; i<bag.length; i++){
-                items += bag[i] + ", ";
+            for(var item in bag){
+                items += item.name + ", ";
             }
             response = "What would you like to use in your bag? You have the following items: " + items;
-            response += "Please say it in the form of 'use item on pokemon'";
+            response += ". Please say it in the form of 'use item on pokemon'.";
             //go to bag mode maybe
             this.attributes['prevState'] = this.handler.state;
             this.handler.state = states.BAGMODE;
@@ -1498,16 +1517,23 @@ var pokeMartHandlers = Alexa.CreateStateHandler(states.POKEMARTMODE, {
     'BagIntent': function () {
         var bag = this.attributes['bag'];
         var response = "";
-        if(bag.length == 0) {
+        var empty = true;
+        for(var item in bag){
+            if(item.count > 0){
+                empty = false;
+                break;
+            }
+        }
+        if(empty) {
             response = "Your bag is empty! Please choose another action.";
             this.emit(':ask', response, response);
         } else {
             var items;
-            for(var i = 0; i<bag.length; i++){
-                items += bag[i] + ", ";
+            for(var item in bag){
+                items += item.name + ", ";
             }
             response = "What would you like to use in your bag? You have the following items: " + items;
-            response += "Please say it in the form of 'use item on pokemon'";
+            response += ". Please say it in the form of 'use item on pokemon'.";
             //go to bag mode maybe
             this.attributes['prevState'] = this.handler.state;
             this.handler.state = states.BAGMODE;
@@ -1835,7 +1861,6 @@ var helper = {
             comparison += location.pokemon[poke];
             if(rand < comparison){
                 return helper.generatePokemon(poke, true, "wild");
-                break;
             }
         });
     },
