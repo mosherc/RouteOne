@@ -15,13 +15,13 @@ var states = {
     SWITCHPOKEMODE: '_SWITCHPOKEMODE',
     BAGMODE: '_BAGMODE',
     WHITEOUTMODE: '_WHITEOUTMODE',
-    RUNAWAYMODE: '_RUNAWAYMODE',
     POKECENTERMODE: '_POKECENTERMODE',
     POKEMARTMODE: '_POKEMARTMODE',
     CITYMODE: '_CITYMODE',
     ASKMODE: '_ASKMODE',                    // Alexa is asking user the questions.
     DESCRIPTIONMODE: '_DESCRIPTIONMODE'     // Alexa is describing the final choice and prompting to start again or quit
 };
+
 var locations = {
     'pallet town': {
         name: "pallet town",
@@ -121,6 +121,7 @@ var attacks = {
         'name': 'poisonpowder',
         'type': 'poison',
         'cat': 'status',
+        'status': 'poison',
         'power': 0,
         'acc': 75,
         'pp': 35
@@ -130,6 +131,7 @@ var attacks = {
         'type': 'grass',
         'acc': 75,
         'cat': 'status',
+        'status': 'sleep',
         'pp': 15
     },
     'growth': {
@@ -460,7 +462,6 @@ exports.handler = function (event, context, callback) {
         chooseMoveHandlers,
         switchPokeHandlers,
         bagHandlers,
-        runAwayHandlers,
         whiteOutHandlers,
         pokeCenterHandlers,
         pokeMartHandlers,
@@ -568,11 +569,9 @@ var askRivalHandlers = Alexa.CreateStateHandler(states.RIVALMODE, {
         } else {
             var rivalName = slot;
             this.attributes['rivalName'] = rivalName;
-            response = '…Er, was it ' + rivalName + '? Thats right! I remember now! His name is ' + rivalName + '! ' + this.attributes['playerName'] + '! Your own very Pokémon legend is about to unfold! A world of dreams and adventures with Pokémon awaits! Lets go! <break/> You speak with mom and she says: <break/> ...Right. All ' + this.attributes['sex'] + 's leave home someday. It said so on TV. Prof. Oak next door is looking for you. <break/> Are you ready to go to the lab?';
+            response = '…Er, was it ' + rivalName + '? Thats right! I remember now! His name is ' + rivalName + '! ' + this.attributes['playerName'] + '! Your own very Pokémon legend is about to unfold! A world of dreams and adventures with Pokémon awaits! Lets go! <break/> You speak with mom and she says: <break/> ...Right. All ' + this.attributes['sex'] + 's leave home someday. It said so on TV. Prof. Oak next door is looking for you. <break/> Are you ready to continue to the lab?';
             this.handler.state = states.MOVEMENTMODE;
         }
-
-
         this.emit(':ask', response, response);
     },
     'AMAZON.HelpIntent': function () {
@@ -596,7 +595,7 @@ var askRivalHandlers = Alexa.CreateStateHandler(states.RIVALMODE, {
 
 var askMovementHandlers = Alexa.CreateStateHandler(states.MOVEMENTMODE, {
 
-    'AMAZON.YesIntent': function(){
+    'ContinueIntent': function(){
         var playerName = this.attributes['playerName'];
         var rivalName = this.attributes['rivalName'];
         var movementState = this.attributes['movementState'];
@@ -612,7 +611,7 @@ var askMovementHandlers = Alexa.CreateStateHandler(states.MOVEMENTMODE, {
         
         //hard code story lines tied to movement states?
         if(movementState == 0){
-            response = "You see your rival in the lab and he says: <break/> What? It's only " + playerName + "? Gramps isn't around. Would you like to go to the grass to find some pokemon?";
+            response = "You see your rival in the lab and he says: <break/> What? It's only " + playerName + "? Gramps isn't around. Would you like to continue to the grass to find some pokemon?";
             reprompt = "Would you like to go to the grass or are you just gonna stand there?";
             this.attributes['movementState']++;
         }
@@ -657,9 +656,6 @@ var askMovementHandlers = Alexa.CreateStateHandler(states.MOVEMENTMODE, {
         }
         
         this.emit(':ask', response, reprompt);
-    },
-    'AMAZON.NoIntent': function(){
-        this.emit(':tell', "Instead of continuing your adventure to become a Pokemon master, you go home to mom and live with her forever.");
     },
     'BagIntent': function () {
         var bag = this.attributes['bag'];
@@ -878,7 +874,14 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLEMODE, {
     },
 
     'RunIntent': function () {
-        this.emit(':tell', "You ran away! What a pansy.");
+        var response;
+        if(this.attributes['battle'] != "wild"){
+            response = "Can't run away from enemy battle! Please choose let's fight, open bag, or switch Pokemon.";
+        } else {
+            response = "Ran away safely! Would you like to continue? Or say train to keep training.";
+            this.handler.state = states.MOVEMENTMODE;
+        }
+        this.emit(':ask', response, response);
     },
     'AMAZON.HelpIntent': function () {
         this.emit(':ask', helpBattle, helpBattle);
@@ -996,6 +999,11 @@ var chooseMoveHandlers = Alexa.CreateStateHandler(states.CHOOSEMOVEMODE, {
         }
         this.emit(':ask', response, response);
     },
+    'GoBackIntent': function () {
+        var response = "Ok. Say let's fight, switch pokemon, open bag, or run away.";
+        this.handler.state = states.BATTLEMODE;
+        this.emit(':ask', response, response);
+    },
     'AMAZON.HelpIntent': function () {
         this.emit(':ask', unhandledGeneral, unhandledGeneral);
     },
@@ -1036,7 +1044,7 @@ var switchPokeHandlers = Alexa.CreateStateHandler(states.SWITCHPOKEMODE, {
 
         healthyArr = helper.getHealthyParty(party);
 
-        // switch Pokemon using slot
+        // need to make sure a name is said...
         switchInName = this.event.request.intent.slots.Pokemon.value;
 
         for(pokeIndex = 0; pokeIndex < party.length; pokeIndex++){
@@ -1063,7 +1071,7 @@ var switchPokeHandlers = Alexa.CreateStateHandler(states.SWITCHPOKEMODE, {
 
     },
     'GoBackIntent': function () {
-        var response = "What would you like to do next? Please say let's fight, switch Pokemon, open bag, or run away.";
+        var response = "Ok. Say let's fight, switch pokemon, open bag, or run away.";
         this.handler.state = states.BATTLEMODE;
         this.emit(':ask', response, response);
     },
@@ -1104,10 +1112,15 @@ var bagHandlers = Alexa.CreateStateHandler(states.BAGMODE, {
         var hasPoke = false;
         var gym = false;
         
-        for(pokeIndex = 0; pokeIndex < party.length; pokeIndex++){
-            if(party[pokeIndex].name == poke){
-                hasPoke = true;
-                break;
+        // need to check if Pokemon is defined, not always necessary
+        if(typeof poke === 'undefined'){
+            poke = party[0];
+        } else {
+            for(pokeIndex = 0; pokeIndex < party.length; pokeIndex++){
+                if(party[pokeIndex].name == poke){
+                    hasPoke = true;
+                    break;
+                }
             }
         }
         var poke = party[pokeIndex];
@@ -1323,30 +1336,6 @@ var whiteOutHandlers = Alexa.CreateStateHandler(states.WHITEOUTMODE, {
     }
 });
 
-var runAwayHandlers = Alexa.CreateStateHandler(states.RUNAWAYMODE, {
-
-    'AMAZON.HelpIntent': function () {
-        this.emit(':ask', unhandledGeneral, unhandledGeneral);
-    },
-    'AMAZON.StopIntent': function () {
-        this.emit(':tell', this.attributes['goodbyeMessage']);
-    },
-    'AMAZON.CancelIntent': function () {
-        this.emit(':tell', this.attributes['goodbyeMessage']);
-    },
-    'AMAZON.StartOverIntent': function () {
-        // reset the game state to start mode
-        this.handler.state = states.STARTMODE;
-        this.emit(':ask', welcomeMessage, repeatWelcomeMessage);
-    },
-    'BicycleIntent': function () {
-        this.emit(':ask', bicycleMessage);
-    },
-    'Unhandled': function () {
-        this.emit(':ask', unhandledGeneral, unhandledGeneral);
-    }
-});
-
 var pokeCenterHandlers = Alexa.CreateStateHandler(states.POKECENTERMODE, {
 
     'AMAZON.YesIntent': function () {
@@ -1419,7 +1408,6 @@ var pokeCenterHandlers = Alexa.CreateStateHandler(states.POKECENTERMODE, {
 var pokeMartHandlers = Alexa.CreateStateHandler(states.POKEMARTMODE, {
 
     'MoneyIntent': function () {
-
         var money = this.attributes['money'];
         var response = "You have " + money + " PokieDollars. ";
         if(money < 1000) {
