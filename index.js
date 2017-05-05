@@ -27,16 +27,31 @@ var locations = {
         name: "pallet town",
         buildings: [],
         type: 'city',
-        next: 'route 1'
+        next: 'route 1',
+        gym: null
     },
     'route 1': {
         pokemon: {
             pidgey: 50,
             rattata: 50
         },
-        trainers: 20,
+        trainers: 10,
         grass: 60,
         items: ['potion', 'pokeball'],
+        type: 'route',
+        next: 'viridian forest'
+    },
+    'viridian forest': {
+        pokemon: {
+            caterpie: 40,
+            weedle: 40,
+            kakuna: 7.5,
+            metapod: 7.5,
+            Pikachū: 5
+        },
+        trainers: 30,
+        grass: 85,
+        items: ['potion', 'pokeball', 'fullheal'],
         type: 'route',
         next: 'viridian city'
     },
@@ -44,6 +59,7 @@ var locations = {
         name: 'viridian city',
         buildings: ['pokemart', 'pokecenter', 'gym'],
         type: 'city',
+        gym: null,
         next: 'route 2'
     }
 };
@@ -273,6 +289,7 @@ var items = {
 var Pokemon = {
     'bulbasaur':{
         'name': 'bulbasaur',
+        'id': 1,
         'base':{
             'hp': 45,
             'atk': 49,
@@ -281,6 +298,7 @@ var Pokemon = {
             'spdef': 65,
             'speed': 45
         },
+        'baseExp': 64,
         'types': ['grass', 'poison'],
         'learnset': {
             '1': attacks.tackle,
@@ -301,6 +319,7 @@ var Pokemon = {
     },
     'ivysaur': {
         'name': 'ivysaur',
+        'id': 2,
         'base':{
             'hp': 60,
             'atk': 62,
@@ -309,6 +328,7 @@ var Pokemon = {
             'spdef': 80,
             'speed': 60
         },
+        'baseExp': 142,
         'types': ['grass', 'poison'],
         'learnset': {
             '1': attacks.tackle,
@@ -328,7 +348,8 @@ var Pokemon = {
         }
     },
     'venusaur': {
-        'name': 'ivysaur',
+        'name': 'venusaur',
+        'id': 3,
         'base': {
             'hp': 80,
             'atk': 82,
@@ -337,6 +358,7 @@ var Pokemon = {
             'spdef': 100,
             'speed': 80
         },
+        'baseExp': 236,
         'types': ['grass', 'poison'],
         'learnset': {
             '1': attacks.tackle,
@@ -352,24 +374,9 @@ var Pokemon = {
         'catchrate': 45,
         'evolves': null
     },
-    'squirtle':{
-        'name': 'squirtle',
-        'base':{
-            'hp': 44,
-            'atk': 48,
-            'def': 65,
-            'spatk': 50,
-            'spdef': 64,
-            'speed': 43
-        },
-        'types': ['water', ''],
-        'learnset': {
-            '1': attacks.tackle,
-            '4': attacks.tailwhip
-        }
-    },
     'charmander':{
         'name': 'charmander',
+        'id': 4,
         'base':{
             'hp': 39,
             'atk': 52,
@@ -378,31 +385,388 @@ var Pokemon = {
             'spdef': 50,
             'speed': 65
         },
+        'baseExp': 62,
         'types': ['fire', ''],
         'learnset': {
             '1': attacks.tackle,
             '2': attacks.scratch
         }
     },
-    'eevee':{
-        'name': 'eevee',
+    'squirtle':{
+        'name': 'squirtle',
+        'id': 7,
         'base':{
-            'hp': 55,
-            'atk': 55,
-            'def': 50,
-            'spatk': 45,
-            'spdef': 65,
-            'speed': 55
+            'hp': 44,
+            'atk': 48,
+            'def': 65,
+            'spatk': 50,
+            'spdef': 64,
+            'speed': 43
         },
-        'types': ['normal', ''],
+        'baseExp': 63,
+        'types': ['water', ''],
         'learnset': {
-            '1': attacks.scratch,
-            '2': attacks.growl
+            '1': attacks.tackle,
+            '4': attacks.tailwhip
         }
     },
-    'Pikachū':{
+//    "wartortle": {
+//        "id": 8,
+//        "name": "wartortle",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 142
+//    },
+//    "blastoise": {
+//        "id": 9,
+//        "name": "blastoise",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 239
+//    },
+//    "caterpie": {
+//        "id": 10,
+//        "name": "caterpie",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 39
+//    },
+//    "metapod": {
+//        "id": 11,
+//        "name": "metapod",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 72
+//    },
+//    "butterfree": {
+//        "id": 12,
+//        "name": "butterfree",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 178
+//    },
+//    "weedle": {
+//        "id": 13,
+//        "name": "weedle",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 39
+//    },
+//    "kakuna": {
+//        "id": 14,
+//        "name": "kakuna",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 72
+//    },
+//    "beedrill": {
+//        "id": 15,
+//        "name": "beedrill",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 178
+//    },
+//    "pidgey": {
+//        "id": 16,
+//        "name": "pidgey",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 50
+//    },
+//    "pidgeotto": {
+//        "id": 17,
+//        "name": "pidgeotto",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 122
+//    },
+//    "pidgeot": {
+//        "id": 18,
+//        "name": "pidgeot",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 216
+//    },
+//    "rattata": {
+//        "id": 19,
+//        "name": "rattata",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 51
+//    },
+//    "raticate": {
+//        "id": 20,
+//        "name": "raticate",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 145
+//    },
+//    "spearow": {
+//        "id": 21,
+//        "name": "spearow",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 52
+//    },
+//    "fearow": {
+//        "id": 22,
+//        "name": "fearow",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 155
+//    },
+//    "ekans": {
+//        "id": 23,
+//        "name": "ekans",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 58
+//    },
+//    "arbok": {
+//        "id": 24,
+//        "name": "arbok",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 153
+//    },
+    'Pikachū': {
         'name': 'Pikachū',
-        'base':{
+        'id': 25,
+        'base': {
             'hp': 35,
             'atk': 55,
             'def': 33,
@@ -410,13 +774,2157 @@ var Pokemon = {
             'spdef': 40,
             'speed': 90
         },
+        'baseExp': 112,
         'types': ['electric', ''],
         'learnset': {
             '1': attacks.tackle,
             '5': attacks.growl,
             '2': attacks.thundershock
         }
-    }
+    },
+//    "raichu": {
+//        "id": 26,
+//        "name": "raichu",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 218
+//    },
+//    "sandshrew": {
+//        "id": 27,
+//        "name": "sandshrew",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 60
+//    },
+//    "sandslash": {
+//        "id": 28,
+//        "name": "sandslash",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 158
+//    },
+//    "nidoran-f": {
+//        "id": 29,
+//        "name": "nidoran-f",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 55
+//    },
+//    "nidorina": {
+//        "id": 30,
+//        "name": "nidorina",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 128
+//    },
+//    "nidoqueen": {
+//        "id": 31,
+//        "name": "nidoqueen",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 227
+//    },
+//    "nidoran-m": {
+//        "id": 32,
+//        "name": "nidoran-m",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 55
+//    },
+//    "nidorino": {
+//        "id": 33,
+//        "name": "nidorino",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 128
+//    },
+//    "nidoking": {
+//        "id": 34,
+//        "name": "nidoking",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 227
+//    },
+//    "clefairy": {
+//        "id": 35,
+//        "name": "clefairy",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 113
+//    },
+//    "clefable": {
+//        "id": 36,
+//        "name": "clefable",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 217
+//    },
+//    "vulpix": {
+//        "id": 37,
+//        "name": "vulpix",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 60
+//    },
+//    "ninetales": {
+//        "id": 38,
+//        "name": "ninetales",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 177
+//    },
+//    "jigglypuff": {
+//        "id": 39,
+//        "name": "jigglypuff",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 95
+//    },
+//    "wigglytuff": {
+//        "id": 40,
+//        "name": "wigglytuff",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 196
+//    },
+//    "zubat": {
+//        "id": 41,
+//        "name": "zubat",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 49
+//    },
+//    "golbat": {
+//        "id": 42,
+//        "name": "golbat",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 159
+//    },
+//    "oddish": {
+//        "id": 43,
+//        "name": "oddish",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 64
+//    },
+//    "gloom": {
+//        "id": 44,
+//        "name": "gloom",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 138
+//    },
+//    "vileplume": {
+//        "id": 45,
+//        "name": "vileplume",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 221
+//    },
+//    "paras": {
+//        "id": 46,
+//        "name": "paras",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 57
+//    },
+//    "parasect": {
+//        "id": 47,
+//        "name": "parasect",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 142
+//    },
+//    "venonat": {
+//        "id": 48,
+//        "name": "venonat",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 61
+//    },
+//    "venomoth": {
+//        "id": 49,
+//        "name": "venomoth",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 158
+//    },
+//    "diglett": {
+//        "id": 50,
+//        "name": "diglett",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 53
+//    },
+//    "dugtrio": {
+//        "id": 51,
+//        "name": "dugtrio",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 142
+//    },
+//    "meowth": {
+//        "id": 52,
+//        "name": "meowth",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 58
+//    },
+//    "persian": {
+//        "id": 53,
+//        "name": "persian",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 154
+//    },
+//    "psyduck": {
+//        "id": 54,
+//        "name": "psyduck",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 64
+//    },
+//    "golduck": {
+//        "id": 55,
+//        "name": "golduck",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 175
+//    },
+//    "mankey": {
+//        "id": 56,
+//        "name": "mankey",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 61
+//    },
+//    "primeape": {
+//        "id": 57,
+//        "name": "primeape",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 159
+//    },
+//    "growlithe": {
+//        "id": 58,
+//        "name": "growlithe",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 70
+//    },
+//    "arcanine": {
+//        "id": 59,
+//        "name": "arcanine",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 194
+//    },
+//    "poliwag": {
+//        "id": 60,
+//        "name": "poliwag",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 60
+//    },
+//    "poliwhirl": {
+//        "id": 61,
+//        "name": "poliwhirl",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 135
+//    },
+//    "poliwrath": {
+//        "id": 62,
+//        "name": "poliwrath",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 230
+//    },
+//    "abra": {
+//        "id": 63,
+//        "name": "abra",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 62
+//    },
+//    "kadabra": {
+//        "id": 64,
+//        "name": "kadabra",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 140
+//    },
+//    "alakazam": {
+//        "id": 65,
+//        "name": "alakazam",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 225
+//    },
+//    "machop": {
+//        "id": 66,
+//        "name": "machop",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 61
+//    },
+//    "machoke": {
+//        "id": 67,
+//        "name": "machoke",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 142
+//    },
+//    "machamp": {
+//        "id": 68,
+//        "name": "machamp",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 227
+//    },
+//    "bellsprout": {
+//        "id": 69,
+//        "name": "bellsprout",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 60
+//    },
+//    "weepinbell": {
+//        "id": 70,
+//        "name": "weepinbell",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 137
+//    },
+//    "victreebel": {
+//        "id": 71,
+//        "name": "victreebel",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 221
+//    },
+//    "tentacool": {
+//        "id": 72,
+//        "name": "tentacool",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 67
+//    },
+//    "tentacruel": {
+//        "id": 73,
+//        "name": "tentacruel",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 180
+//    },
+//    "geodude": {
+//        "id": 74,
+//        "name": "geodude",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 60
+//    },
+//    "graveler": {
+//        "id": 75,
+//        "name": "graveler",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 137
+//    },
+//    "golem": {
+//        "id": 76,
+//        "name": "golem",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 223
+//    },
+//    "ponyta": {
+//        "id": 77,
+//        "name": "ponyta",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 82
+//    },
+//    "rapidash": {
+//        "id": 78,
+//        "name": "rapidash",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 175
+//    },
+//    "slowpoke": {
+//        "id": 79,
+//        "name": "slowpoke",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 63
+//    },
+//    "slowbro": {
+//        "id": 80,
+//        "name": "slowbro",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 172
+//    },
+//    "magnemite": {
+//        "id": 81,
+//        "name": "magnemite",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 65
+//    },
+//    "magneton": {
+//        "id": 82,
+//        "name": "magneton",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 163
+//    },
+//    "farfetchd": {
+//        "id": 83,
+//        "name": "farfetchd",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 123
+//    },
+//    "doduo": {
+//        "id": 84,
+//        "name": "doduo",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 62
+//    },
+//    "dodrio": {
+//        "id": 85,
+//        "name": "dodrio",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 161
+//    },
+//    "seel": {
+//        "id": 86,
+//        "name": "seel",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 65
+//    },
+//    "dewgong": {
+//        "id": 87,
+//        "name": "dewgong",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 166
+//    },
+//    "grimer": {
+//        "id": 88,
+//        "name": "grimer",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 65
+//    },
+//    "muk": {
+//        "id": 89,
+//        "name": "muk",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 175
+//    },
+//    "shellder": {
+//        "id": 90,
+//        "name": "shellder",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 61
+//    },
+//    "cloyster": {
+//        "id": 91,
+//        "name": "cloyster",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 184
+//    },
+//    "gastly": {
+//        "id": 92,
+//        "name": "gastly",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 62
+//    },
+//    "haunter": {
+//        "id": 93,
+//        "name": "haunter",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 142
+//    },
+//    "gengar": {
+//        "id": 94,
+//        "name": "gengar",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 225
+//    },
+//    "onix": {
+//        "id": 95,
+//        "name": "onix",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 77
+//    },
+//    "drowzee": {
+//        "id": 96,
+//        "name": "drowzee",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 66
+//    },
+//    "hypno": {
+//        "id": 97,
+//        "name": "hypno",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 169
+//    },
+//    "krabby": {
+//        "id": 98,
+//        "name": "krabby",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 65
+//    },
+//    "kingler": {
+//        "id": 99,
+//        "name": "kingler",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 166
+//    },
+//    "voltorb": {
+//        "id": 100,
+//        "name": "voltorb",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 66
+//    },
+//    "electrode": {
+//        "id": 101,
+//        "name": "electrode",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 168
+//    },
+//    "exeggcute": {
+//        "id": 102,
+//        "name": "exeggcute",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 65
+//    },
+//    "exeggutor": {
+//        "id": 103,
+//        "name": "exeggutor",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 182
+//    },
+//    "cubone": {
+//        "id": 104,
+//        "name": "cubone",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 64
+//    },
+//    "marowak": {
+//        "id": 105,
+//        "name": "marowak",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 149
+//    },
+//    "hitmonlee": {
+//        "id": 106,
+//        "name": "hitmonlee",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 159
+//    },
+//    "hitmonchan": {
+//        "id": 107,
+//        "name": "hitmonchan",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 159
+//    },
+//    "lickitung": {
+//        "id": 108,
+//        "name": "lickitung",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 77
+//    },
+//    "koffing": {
+//        "id": 109,
+//        "name": "koffing",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 68
+//    },
+//    "weezing": {
+//        "id": 110,
+//        "name": "weezing",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 172
+//    },
+//    "rhyhorn": {
+//        "id": 111,
+//        "name": "rhyhorn",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 69
+//    },
+//    "rhydon": {
+//        "id": 112,
+//        "name": "rhydon",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 170
+//    },
+//    "chansey": {
+//        "id": 113,
+//        "name": "chansey",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 395
+//    },
+//    "tangela": {
+//        "id": 114,
+//        "name": "tangela",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 87
+//    },
+//    "kangaskhan": {
+//        "id": 115,
+//        "name": "kangaskhan",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 172
+//    },
+//    "horsea": {
+//        "id": 116,
+//        "name": "horsea",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 59
+//    },
+//    "seadra": {
+//        "id": 117,
+//        "name": "seadra",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 154
+//    },
+//    "goldeen": {
+//        "id": 118,
+//        "name": "goldeen",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 64
+//    },
+//    "seaking": {
+//        "id": 119,
+//        "name": "seaking",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 158
+//    },
+//    "staryu": {
+//        "id": 120,
+//        "name": "staryu",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 68
+//    },
+//    "starmie": {
+//        "id": 121,
+//        "name": "starmie",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 182
+//    },
+//    "mr-mime": {
+//        "id": 122,
+//        "name": "mr-mime",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 161
+//    },
+//    "scyther": {
+//        "id": 123,
+//        "name": "scyther",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 100
+//    },
+//    "jynx": {
+//        "id": 124,
+//        "name": "jynx",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 159
+//    },
+//    "electabuzz": {
+//        "id": 125,
+//        "name": "electabuzz",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 172
+//    },
+//    "magmar": {
+//        "id": 126,
+//        "name": "magmar",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 173
+//    },
+//    "pinsir": {
+//        "id": 127,
+//        "name": "pinsir",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 175
+//    },
+//    "tauros": {
+//        "id": 128,
+//        "name": "tauros",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 172
+//    },
+//    "magikarp": {
+//        "id": 129,
+//        "name": "magikarp",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 40
+//    },
+//    "gyarados": {
+//        "id": 130,
+//        "name": "gyarados",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 189
+//    },
+//    "lapras": {
+//        "id": 131,
+//        "name": "lapras",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 187
+//    },
+//    "ditto": {
+//        "id": 132,
+//        "name": "ditto",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 101
+//    },
+    'eevee': {
+        'name': 'eevee',
+        'id': 133,
+        'base': {
+            'hp': 55,
+            'atk': 55,
+            'def': 50,
+            'spatk': 45,
+            'spdef': 65,
+            'speed': 55
+        },
+        'baseExp': 65,
+        'types': ['normal', ''],
+        'learnset': {
+            '1': attacks.scratch,
+            '2': attacks.growl
+        }
+    },
+//    "vaporeon": {
+//        "id": 134,
+//        "name": "vaporeon",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 184
+//    },
+//    "jolteon": {
+//        "id": 135,
+//        "name": "jolteon",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 184
+//    },
+//    "flareon": {
+//        "id": 136,
+//        "name": "flareon",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 184
+//    },
+//    "porygon": {
+//        "id": 137,
+//        "name": "porygon",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 79
+//    },
+//    "omanyte": {
+//        "id": 138,
+//        "name": "omanyte",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 71
+//    },
+//    "omastar": {
+//        "id": 139,
+//        "name": "omastar",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 173
+//    },
+//    "kabuto": {
+//        "id": 140,
+//        "name": "kabuto",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 71
+//    },
+//    "kabutops": {
+//        "id": 141,
+//        "name": "kabutops",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 173
+//    },
+//    "aerodactyl": {
+//        "id": 142,
+//        "name": "aerodactyl",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 180
+//    },
+//    "snorlax": {
+//        "id": 143,
+//        "name": "snorlax",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 189
+//    },
+//    "articuno": {
+//        "id": 144,
+//        "name": "articuno",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 261
+//    },
+//    "zapdos": {
+//        "id": 145,
+//        "name": "zapdos",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 261
+//    },
+//    "moltres": {
+//        "id": 146,
+//        "name": "moltres",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 261
+//    },
+//    "dratini": {
+//        "id": 147,
+//        "name": "dratini",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 60
+//    },
+//    "dragonair": {
+//        "id": 148,
+//        "name": "dragonair",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 147
+//    },
+//    "dragonite": {
+//        "id": 149,
+//        "name": "dragonite",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 270
+//    },
+//    "mewtwo": {
+//        "id": 150,
+//        "name": "mewtwo",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 306
+//    },
+//    "mew": {
+//        "id": 151,
+//        "name": "mew",
+//        'base': {
+//            'hp': ,
+//            'atk': ,
+//            'def': ,
+//            'spatk': ,
+//            'spdef': ,
+//            'speed':
+//        },
+//        'types': [],
+//        'learnset': {},
+//        'catchrate': ,
+//        'evolves': null,
+//        "baseExp": 270
+//    }
 };
 //need to build pokedex based on names in Pokemon object
 var pokedex = ["squirtle", "charmander", "bulbasaur", "Pikachū", "eevee", "pidgey", "rattata"];
@@ -687,7 +3195,10 @@ var askMovementHandlers = Alexa.CreateStateHandler(states.MOVEMENTMODE, {
         var response;
         var location = this.attributes['location'];
         var bag = this.attributes['bag'];
-        
+        if(this.attributes['movementState'] < 2){
+            response = "You don't have any Pokemon to train! Say continue instead.";
+            this.emit(':ask', response, response);
+        }
         
         var randAction = helper.randomAction(location);
         if(randAction == "trainer"){
@@ -707,7 +3218,7 @@ var askMovementHandlers = Alexa.CreateStateHandler(states.MOVEMENTMODE, {
             this.attributes['bag'][foundItem].count++;
             response = "You found a " + foundItem + "! You put it in your bag for safekeeping. Would you like to continue forward? Or you can say train to stay here and train. ";
         } else {
-            response = "You did not encounter any Pokemon. Would you like to continue forward? Or you can say train to stay here and train. ";
+            response = "Nothing happened! Say train to keep training, or continue to go to the next area";
         }
         this.emit(':ask', response, response);
     },
@@ -1651,7 +4162,7 @@ var helper = {
     addExperience: function(poke, opp) {
         var a = opp.wild == true ? 1 : 1.5;
         var base = Pokemon[poke.name].base;
-        var b = (base.spdef + base.spatk + base.def + base.atk + base.speed + base.hp)/6;
+        var b = Pokemon[poke.name].baseExp;
         var L = opp.level;
         var exp = Math.floor(a*b*L/(7));
         poke.exp = +poke.exp+exp;
@@ -1697,10 +4208,10 @@ var helper = {
     //poke is attacker, opp is defender, move is move object
     calcDamage: function(poke, opp, move, crit) {
         var modifier = crit * helper.calcRandDamage() * helper.calcSTAB(poke, move) * helper.calcEffectivity(move, opp);
-        //I should be able to say if it is critical!
         if(move.cat != "status"){
             var rand = Math.random()*100;
-            if(rand < move.acc){
+            // need to implement evasion
+            if(rand < move.acc*poke.modifiers.acc){
                 //move hits
                 var atk = move.cat == "physical" ? poke.stats.atk : poke.stats.spatk;
                 var def = move.cat == "physical" ? opp.stats.def : opp.stats.spdef;
@@ -1928,6 +4439,24 @@ var helper = {
         return shuffled.slice(0, size);
     },
     getStatusEffect: function(poke, stat, modifier){
+        switch(stat){
+            case 'atk':
+                stat = 'attack';
+                break;
+            case 'spatk':
+                stat = 'special attack';
+                break;
+            case 'def':
+                stat = 'defense';
+                break;
+            case 'spdef':
+                stat = 'special defense';
+                break;
+            case 'acc':
+                stat = 'accuracy';
+                break;
+                
+                   }
         var string = poke.name + "'s " + stat + " ";
         var mod = "";
         switch(modifier[stat]){
@@ -2111,8 +4640,9 @@ var helper = {
         poke.stats.atk = returnStat('atk');
         poke.stats.speed = returnStat('speed');
 
+        //is this correct?
         for(var mod in poke.modifiers) {
-            modifiers[mod] = 0;
+            poke.modifiers[mod] = 0;
         }
     },
     switchPokemon: function(party, p1, p2) {
