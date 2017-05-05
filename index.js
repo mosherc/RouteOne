@@ -4210,8 +4210,7 @@ var helper = {
         var modifier = crit * helper.calcRandDamage() * helper.calcSTAB(poke, move) * helper.calcEffectivity(move, opp);
         if(move.cat != "status"){
             var rand = Math.random()*100;
-            // need to implement evasion
-            if(rand < move.acc*poke.modifiers.acc){
+            if(rand < move.acc*modifiers[poke.modifiers.acc]){
                 //move hits
                 var atk = move.cat == "physical" ? poke.stats.atk : poke.stats.spatk;
                 var def = move.cat == "physical" ? opp.stats.def : opp.stats.spdef;
@@ -4439,25 +4438,26 @@ var helper = {
         return shuffled.slice(0, size);
     },
     getStatusEffect: function(poke, stat, modifier){
+        var statLong;
         switch(stat){
             case 'atk':
-                stat = 'attack';
+                statLong = 'attack';
                 break;
             case 'spatk':
-                stat = 'special attack';
+                statLong = 'special attack';
                 break;
             case 'def':
-                stat = 'defense';
+                statLong = 'defense';
                 break;
             case 'spdef':
-                stat = 'special defense';
+                statLong = 'special defense';
                 break;
             case 'acc':
-                stat = 'accuracy';
+                statLong = 'accuracy';
                 break;
-                
-                   }
-        var string = poke.name + "'s " + stat + " ";
+        }
+        var string = poke.name + "'s " + statLong + " ";
+        //TODO fix this below
         var mod = "";
         switch(modifier[stat]){
             case -2:
