@@ -12,3 +12,7 @@ Steps in this adventure:
 8. Get ready for a rival battle!
 9. ???
 10. Profit
+11. TODO - Player movement
+
+# Demo
+https://youtu.be/HMtnOSx5vt8 - enjoy!
