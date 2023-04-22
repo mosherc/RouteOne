@@ -8,6 +8,7 @@ import { STATES } from './constants/states';
 import { TYPE_CHART } from './constants/type-chart';
 import { Sex } from './handlers/HandlerThis';
 import { helpBattle } from './constants/messages';
+import { TRAINER_ACCOSTMENTS, TRAINER_DEFEATS, VOICE_NAMES, VoiceName, youngsterJoey } from './constants/trainers';
 
 export const helper = {
   addExperience(poke: Pokemon, opp: Pokemon): [number, boolean] {
@@ -33,7 +34,7 @@ export const helper = {
         if (damage < prevHp) {
           const maxHp = helper.getMaxHp(opp);
           const newHp = prevHp - damage;
-          const percentHp = Math.floor(newHp / maxHp * 100);
+          const percentHp = Math.floor((newHp / maxHp) * 100);
           if (percentHp < 25) {
             response += `${opp.name} only has ${newHp} H P left! `;
           }
@@ -149,7 +150,7 @@ export const helper = {
     return money;
   },
   generateOT: () => {
-    const names = ['Loser', 'Jerk', 'Joey', 'Silver', 'Red', 'Misty', 'Brock', 'Jesse', 'James', 'Tobey', 'Jennie', 'Jack', 'Jill', 'Marcus'];
+    const names = ['Joey', 'Jesse', 'James', 'Tobey', 'Jennie', 'Jack', 'Jill', 'Marcus', ...VOICE_NAMES];
     return names[helper.generateRandomInt(0, names.length - 1)];
   },
   generateParty(OT: string, playerParty: Pokemon[]) {
@@ -314,14 +315,10 @@ export const helper = {
     }, [] as Pokemon[]);
   },
   getMaxHp(poke: Pokemon) {
-    return (
-      Math.floor(((2 * poke.base.hp + poke.individualValues.hp + Math.floor(poke.effortValues.hp / 4)) * poke.level) / 100) + poke.level + 10
-    );
+    return Math.floor(((2 * poke.base.hp + poke.individualValues.hp + Math.floor(poke.effortValues.hp / 4)) * poke.level) / 100) + poke.level + 10;
   },
   getMaxStat(poke: Pokemon, stat: StatName) {
-    return Math.floor(
-      Math.floor(((2 * poke.base[stat] + poke.individualValues[stat] + Math.floor(poke.effortValues[stat] / 4)) * poke.level) / 100) + 5,
-    )
+    return Math.floor(Math.floor(((2 * poke.base[stat] + poke.individualValues[stat] + Math.floor(poke.effortValues[stat] / 4)) * poke.level) / 100) + 5);
   },
   getPronouns(sex: Sex) {
     const isBoy = sex === 'boy';
@@ -332,6 +329,20 @@ export const helper = {
       child: isBoy ? 'son' : 'daughter',
       grandChild: isBoy ? 'grandson' : 'granddaughter',
     } as const;
+  },
+  getRandomBattleDialogue(OT: string): {
+    accostment: string;
+    defeat: string;
+    voice: VoiceName;
+  } {
+    if (OT.toLowerCase() === 'joey') {
+      return youngsterJoey;
+    }
+    return {
+      accostment: TRAINER_ACCOSTMENTS[helper.generateRandomInt(0, TRAINER_ACCOSTMENTS.length - 1)],
+      defeat: TRAINER_DEFEATS[helper.generateRandomInt(0, TRAINER_DEFEATS.length - 1)],
+      voice: VOICE_NAMES[helper.generateRandomInt(0, VOICE_NAMES.length - 1)],
+    };
   },
   getRandomSubarray(arr: any[], size: number) {
     const shuffled = arr.slice(0);
@@ -422,7 +433,16 @@ export const helper = {
   },
   // checks to see if POKE has fainted, either can own it
   // playerName should always be the Alexa player, oppName should always be opponent's name, etc., but poke is the poke to check if fainted
-  isFainted(playerName: string, oppName: string, party: Pokemon[], oppParty: Pokemon[], poke: Pokemon, second: boolean, location: Location) {
+  isFainted(
+    playerName: string,
+    oppName: string,
+    party: Pokemon[],
+    oppParty: Pokemon[],
+    poke: Pokemon,
+    second: boolean,
+    location: Location,
+    oppVoice: VoiceName,
+  ) {
     let response = '';
     let healthyArr;
     const playerPoke = party[0];
@@ -478,6 +498,7 @@ export const helper = {
             response += `${playerName} earned ${money} PokieDollars from ${oppName}. `;
 
             // Trainer should be able to make witty response!
+            response += helper.speakWithVoice(helper.getRandomBattleDialogue(opp.OT).defeat, oppVoice);
 
             state = STATES.BATTLEOVERMODE;
           }
@@ -560,7 +581,7 @@ export const helper = {
       // @ts-ignore
       return undefined;
     }
-    console.log({ original: str, deburred: deburr(str) })
+    console.log({ original: str, deburred: deburr(str) });
     return deburr(String(str)).replace(' ', '_').toUpperCase();
   },
   speakAs(response: string, character: CharacterVoice) {
@@ -599,7 +620,7 @@ export const helper = {
   speakAsMart(response: string) {
     return helper.speakAs(response, { char: 'mart' });
   },
-  speakWithVoice(response: string, name: string) {
+  speakWithVoice(response: string, name: VoiceName) {
     return `<voice name="${name}">${response}</voice>`;
   },
   switchPokemon(party: Pokemon[], p1: number, p2: number) {

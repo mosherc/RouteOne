@@ -232,8 +232,9 @@ const askLocationHandlers = Alexa.CreateStateHandler(STATES.CHOOSELOCATIONMODE, 
     let response;
     const { location } = this.attributes;
     console.log(this.event.request.intent.slots);
-    const chosenLocation = LOCATIONS[helper.screamingSnake<AvailableLocations>(this.event.request.intent.slots.Location.value)];
-    if (location.name === chosenLocation.name) {
+    const chosenLocationKey = helper.screamingSnake<AvailableLocations>(this.event.request.intent.slots.Location.value);
+    const chosenLocation = LOCATIONS[chosenLocationKey];
+    if (location.adjacentLocations.includes(chosenLocationKey)) {
       const nextLocation = chosenLocation;
       this.attributes.location = nextLocation;
       response = `You made it safely to ${nextLocation.name}. `;
@@ -245,7 +246,7 @@ const askLocationHandlers = Alexa.CreateStateHandler(STATES.CHOOSELOCATIONMODE, 
         this.handler.state = STATES.MOVEMENTMODE;
       }
     } else {
-      response = 'Unable to determine location. Please try again.';
+      response = `You can't go to ${chosenLocation.name} from ${location.name}. There is ${location.adjacentLocations.map((loc) => loc.split('_').join(' ').toLowerCase()).join(', ')}.`;
     }
     this.emit(':ask', response, response);
   },
@@ -426,7 +427,7 @@ const chooseMoveHandlers = Alexa.CreateStateHandler(STATES.CHOOSEMOVEMODE, {
 const switchPokeHandlers = Alexa.CreateStateHandler(STATES.SWITCHPOKEMODE, {
   'SwitchPokemonIntent': function (this: HandlerThis) {
     let response = '';
-    const { party, playerName, opponentParty, opponentName, location } = this.attributes;
+    const { party, playerName, opponentParty, opponentName, location, opponentVoice } = this.attributes;
     let pokeIndex;
 
     // const healthyArr = helper.getHealthyParty(party);
@@ -456,7 +457,7 @@ const switchPokeHandlers = Alexa.CreateStateHandler(STATES.SWITCHPOKEMODE, {
     response += helper.attack(opp, poke, oppMove);
 
     // check if faint
-    response += helper.isFainted(playerName, opponentName, party, opponentParty, poke, true, location).response;
+    response += helper.isFainted(playerName, opponentName, party, opponentParty, poke, true, location, opponentVoice).response;
 
     this.emit(':ask', response, response);
   },
@@ -478,7 +479,7 @@ const bagHandlers = Alexa.CreateStateHandler(STATES.BAGMODE, {
     let response = '';
     const item = helper.screamingSnake<AvailableItems>(this.event.request.intent.slots.Item.value);
     const pokeSlot = helper.screamingSnake<AvailablePokemon | undefined>(this.event.request.intent.slots.Pokemon.value);
-    const { playerName, party, opponentParty, opponentName, sex, location } = this.attributes;
+    const { playerName, party, opponentParty, opponentName, sex, location, opponentVoice } = this.attributes;
     let gym = false;
     let poke: Pokemon | undefined;
 
@@ -580,7 +581,7 @@ const bagHandlers = Alexa.CreateStateHandler(STATES.BAGMODE, {
           // wild poke attacks
           const oppMove = opp.moveSet[helper.generateRandomInt(0, opp.moveSet.length - 1)];
           response += helper.attack(opp, poke, oppMove);
-          const faintRes = helper.isFainted(playerName, opponentName, party, opponentParty, poke, true, location);
+          const faintRes = helper.isFainted(playerName, opponentName, party, opponentParty, poke, true, location, opponentVoice);
           this.handler.state = faintRes.state;
           response += faintRes.response;
         }
@@ -604,7 +605,7 @@ const bagHandlers = Alexa.CreateStateHandler(STATES.BAGMODE, {
       // opponent attacks
       const oppMove = opp.moveSet[helper.generateRandomInt(0, opp.moveSet.length - 1)];
       response += helper.attack(opp, poke, oppMove);
-      const faintRes = helper.isFainted(playerName, opponentName, party, opponentParty, poke, true, location);
+      const faintRes = helper.isFainted(playerName, opponentName, party, opponentParty, poke, true, location, opponentVoice);
       this.handler.state = faintRes.state;
       response += faintRes.response;
     }

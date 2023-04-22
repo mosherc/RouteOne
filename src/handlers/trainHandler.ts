@@ -1,3 +1,4 @@
+import { helpBattle } from '../constants/messages';
 import { STATES } from '../constants/states';
 import { helper } from '../helper';
 import { HandlerThis } from './HandlerThis';
@@ -20,15 +21,23 @@ export function trainHandler(this: HandlerThis) {
   const randAction = helper.randomAction(location);
   if (randAction === 'trainer') {
     this.attributes.battle = 'trainer'; // can also be "trainer" for trainer battle, or "wild" for wild battle
-    this.attributes.opponentName = helper.generateOT();
-    this.attributes.opponentParty = helper.generateParty(this.attributes.opponentName, party);
+    const OT = helper.generateOT();
+    this.attributes.opponentName = OT;
+    this.attributes.opponentParty = helper.generateParty(OT, party);
     this.handler.state = STATES.BATTLEMODE;
+    const dialogue = helper.getRandomBattleDialogue(OT);
+    this.attributes.opponentVoice = dialogue.voice;
+    response = helper.speakWithVoice(dialogue.accostment, dialogue.voice);
   } else if (randAction === 'wild') {
     const pokemon = location.type === 'ROUTE' ? helper.generateRandomPoke(location, party) : null;
+    if (!pokemon) {
+      throw new Error('Unable to generate pokemon.');
+    }
     this.attributes.battle = 'wild'; // can also be "trainer" for trainer battle, or "wild" for wild battle
     this.attributes.opponentName = 'wild';
-    this.attributes.opponentParty = pokemon ? [pokemon] : [];
+    this.attributes.opponentParty = [pokemon];
     this.handler.state = STATES.BATTLEMODE;
+    response = `Wild ${pokemon.name} appeared! Say fight to battle! ${helpBattle}`;
   } else if (randAction === 'item') {
     // get item
     const findableItems = location.items;

@@ -2,6 +2,7 @@ import { ITEMS, Item } from '../constants/items';
 import { AvailablePokemon, Pokemon } from '../constants/pokemon';
 import { STATES } from '../constants/states';
 import { Location } from '../constants/locations';
+import { VoiceName } from '../constants/trainers';
 
 export type Sex = 'boy' | 'girl';
 export type HandlerThis = {
@@ -17,6 +18,7 @@ export type HandlerThis = {
     movementState: number;
     opponentName: string | undefined;
     opponentParty: Pokemon[] | undefined;
+    opponentVoice: VoiceName;
     party: Pokemon[];
     playerName: string;
     prevState: (typeof STATES)[keyof typeof STATES] | null;
