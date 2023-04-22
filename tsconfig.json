@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    // "baseUrl": "./",
+    "rootDir": "./src",
+    "outDir": "dist",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "target": "ES2017",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noErrorTruncation": true,
+    // "paths": { "../*": ["./src/*"] },
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "noImplicitAny": false,
+  },
+  "include": ["src/**/*.ts", "types/*.d.ts"],
+  "exclude": ["node_modules", "dist"]
+}
