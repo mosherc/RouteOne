@@ -26,7 +26,8 @@ export const helper = {
       throw new Error(`Poke does not have requested move! Maybe it doesn't have a learnSet?`);
     }
     let response = '';
-    response += `${poke.OT}'s ${poke.name} used ${move.name}! `;
+    response += poke.OT !== 'wild' ? `${poke.OT}'s ` : '';
+    response += `${poke.name} used ${move.name}! `;
     if (move.category === 'PHYSICAL' || move.category === 'SPECIAL') {
       const crit = helper.calcCritMultiplier();
       const prevHp = opp.stats.hp;
@@ -107,11 +108,14 @@ export const helper = {
   },
   calcStatusEffect(poke: Pokemon, stat: StatName, value: DamageModifiers): string {
     let response = '';
+    console.log({ stat, mods: poke.modifiers });
     const modifierValue = poke.modifiers[stat];
     if (modifierValue) {
+      console.log({ modifierValue });
       if (modifierValue < 6 || modifierValue > -6) {
         const newStatValue = Math.min(-6, Math.max(6, value)) as DamageModifiers;
         poke.modifiers[stat] += newStatValue;
+        console.log({ newStatValue, calcdStat: DAMAGE_MODIFIERS[modifierValue] * helper.calcStat(poke, stat) });
         poke.stats[stat] = DAMAGE_MODIFIERS[modifierValue] * helper.calcStat(poke, stat);
         response = helper.getStatusEffect(poke, stat, newStatValue);
       } else if (modifierValue >= 6) {
