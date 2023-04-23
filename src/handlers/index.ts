@@ -1,6 +1,7 @@
 export * from './HandlerThis';
 export * from './bagHandler';
 export * from './bicycleHandler';
+export * from './checkPokeHandler';
 export * from './chooseLocationHandler';
 export * from './chooseMoveHandler';
 export * from './exitHandler';

@@ -4,7 +4,7 @@ import { helper } from '../helper';
 import { HandlerThis } from './HandlerThis';
 
 export function chooseMoveHandler(this: HandlerThis) {
-  const { party, opponentParty, opponentName, playerName, location, opponentVoice, rivalName, rivalSex } = this.attributes;
+  const { party, opponentParty, opponentName, location } = this.attributes;
   if (!opponentParty || !opponentName) {
     throw new Error('opponentParty or opponentName not defined in ChooseMoveIntent');
   }

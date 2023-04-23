@@ -20,6 +20,7 @@ export type SessionAttr = {
   opponentVoice: VoiceName;
   party: Pokemon[];
   playerName: string;
+  playerPokemon: Pokemon;
   prevState: (typeof STATES)[keyof typeof STATES] | null;
   rivalName: string;
   rivalPronouns: {

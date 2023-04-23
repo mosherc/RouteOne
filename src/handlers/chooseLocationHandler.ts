@@ -1,5 +1,4 @@
 import { AvailableLocations, LOCATIONS } from "../constants/locations";
-import { helpMovement } from "../constants/messages";
 import { STATES } from "../constants/states";
 import { helper } from "../helper";
 import { HandlerThis } from "./HandlerThis";
@@ -15,14 +14,15 @@ export function chooseLocationHandler(this: HandlerThis) {
     this.attributes.location = nextLocation;
     response = `You made it safely to ${nextLocation.name}. `;
     if (nextLocation.type === 'CITY') {
-      response += helper.getLocationActivities(nextLocation);
       this.handler.state = STATES.CITYMODE;
+      response += helper.modeAvailableActions(this.attributes, this.handler.state);
     } else {
-      response += helpMovement;
       this.handler.state = STATES.MOVEMENTMODE;
+      response += helper.modeAvailableActions(this.attributes, this.handler.state);
     }
   } else {
-    response = `You can't go to ${chosenLocation.name} from ${location.name}. There is ${location.adjacentLocations.map((loc) => loc.split('_').join(' ').toLowerCase()).join(', ')}.`;
+    response = `You can't go to ${chosenLocation.name} from ${location.name}. `;
+    response += helper.modeAvailableActions(this.attributes, this.handler.state);
   }
   this.emit(':ask', response, response);
 }

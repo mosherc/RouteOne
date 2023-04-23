@@ -17,3 +17,5 @@ export const STATES = {
   ASKMODE: '_ASKMODE', // Alexa is asking user the questions.
   DESCRIPTIONMODE: '_DESCRIPTIONMODE', // Alexa is describing the final choice and prompting to start again or quit
 } as const;
+
+export type StateValue = typeof STATES[keyof typeof STATES]

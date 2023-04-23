@@ -4,10 +4,10 @@ import { ITEMS, Item } from './constants/items';
 import { Route, LOCATIONS, Location } from './constants/locations';
 import { Move, StatName, ModifierName, AvailableMoves, MOVE_SET } from './constants/move-set';
 import { Pokemon, POKEDEX, AVAILABLE_POKEMON, AvailablePokemon } from './constants/pokemon';
-import { STATES } from './constants/states';
+import { STATES, StateValue } from './constants/states';
 import { TYPE_CHART } from './constants/type-chart';
 import { SessionAttr, Sex } from './handlers/HandlerThis';
-import { helpBattle } from './constants/messages';
+import { helpBattle, helpMovement, welcomePokeCenter, welcomePokeMart } from './constants/messages';
 import { TRAINER_ACCOSTMENTS, TRAINER_DEFEATS, VOICE_NAMES, VoiceName, youngsterJoey } from './constants/trainers';
 
 export const helper = {
@@ -285,20 +285,10 @@ export const helper = {
   getAdjacentLocations(location: Location) {
     return location.adjacentLocations.map((loc) => LOCATIONS[loc].name).join(', ');
   },
-  getLocationActivities(location: Location) {
-    let response = 'You can ';
-    location.buildings.forEach((building) => {
-      if (building === 'POKEMART') {
-        response += 'go to the PokieMart,';
-      } else if (building === 'POKECENTER') {
-        response += 'go to the PokieCenter,';
-      } else if (building === 'GYM') {
-        response += 'go to the gym to battle the leader,';
-      }
-    });
-    response += location.buildings.length > 0 ? ' or ' : '';
-    response += `you can ask to leave the area to get to ${helper.getAdjacentLocations(location)}. `;
-    return response;
+  getBagItems(bag: SessionAttr['bag']) {
+    return Object.values(bag)
+      .filter((item) => item.count > 0)
+      .map((item) => item.name)
   },
   getEffectivity(effectivity: number) {
     // need to reference type chart
@@ -334,11 +324,32 @@ export const helper = {
       return pokemon;
     }, [] as Pokemon[]);
   },
+  getLocationActivities(location: Location) {
+    let response = location.buildings.length > 0 ? 'You can ' : '';
+    location.buildings.forEach((building) => {
+      if (building === 'POKEMART') {
+        response += 'go to the PokieMart,';
+      } else if (building === 'POKECENTER') {
+        response += 'go to the PokieCenter,';
+      } else if (building === 'GYM') {
+        response += 'go to the gym to battle the leader,';
+      }
+    });
+    response += location.buildings.length > 0 ? ' or ' : '';
+    response += `you can ask to leave the area to get to ${helper.getAdjacentLocations(location)}. `;
+    return response;
+  },
   getMaxHp(poke: Pokemon) {
     return Math.floor(((2 * poke.base.hp + poke.individualValues.hp + Math.floor(poke.effortValues.hp / 4)) * poke.level) / 100) + poke.level + 10;
   },
   getMaxStat(poke: Pokemon, stat: StatName) {
     return Math.floor(Math.floor(((2 * poke.base[stat] + poke.individualValues[stat] + Math.floor(poke.effortValues[stat] / 4)) * poke.level) / 100) + 5);
+  },
+  getMoves(poke: Pokemon) {
+    return poke.moveSet.map((move) => move.name).join(', ');
+  },
+  getPokemonByKey(key: AvailablePokemon) {
+    return POKEDEX[key];
   },
   getPronouns(sex: Sex) {
     const isBoy = sex === 'boy';
@@ -479,13 +490,13 @@ export const helper = {
         healthyArr = helper.getHealthyParty(party);
 
         if (healthyArr.length === 0) {
+          state = STATES.WHITEOUTMODE;
           money = Math.floor(0.333 * helper.endBattle(opponentParty));
           response += `${playerName} is out of usable Pokemon! ${playerName} blacked out! ${playerName} dropped ${money} PokieDollars and ran off! Do you still want to continue?`;
           ctx.money = -money;
-          state = STATES.WHITEOUTMODE;
         } else {
-          response += `You have the following Pokemon left: ${healthyArr.join(' ')}. Please say 'switch' and then the Pokemon's name in order to switch them. `;
           state = STATES.SWITCHPOKEMODE;
+          response += helper.modeAvailableActions(ctx, state);
         }
       } else {
         opp = poke;
@@ -562,6 +573,34 @@ export const helper = {
       }
     }
     return { fainted, response, state, money };
+  },
+  modeAvailableActions(ctx: SessionAttr, state: StateValue | null) {
+    // This is mainly for random one off actions where we need to know what the actions were for the current state
+    switch (state) {
+      case STATES.MOVEMENTMODE:
+        return helpMovement;
+      case STATES.BATTLEMODE:
+        return helpBattle;
+      case STATES.WHITEOUTMODE:
+      case STATES.POKECENTERMODE:
+        return helper.speakAsNurse(welcomePokeCenter);
+      case STATES.CITYMODE:
+        return helper.getLocationActivities(ctx.location);
+      case STATES.CHOOSELOCATIONMODE:
+        return `You can go to ${helper.getAdjacentLocations(ctx.location)}.`;
+      // case STATES.BATTLEOVERMODE:
+      case STATES.CHOOSEMOVEMODE:
+        return `Your ${ctx.playerPokemon.name} knows ${helper.getMoves(ctx.playerPokemon)}. Say one of these moves!`
+      case STATES.SWITCHPOKEMODE:
+        const healthyArr = helper.getHealthyParty(ctx.party);
+        return `You have the following Pokemon left: ${healthyArr.join(', ')}. Please say 'switch' and then the Pokemon's name in order to switch them. `
+      case STATES.BAGMODE:
+        return `You have the following items: ${helper.getBagItems(ctx.bag)}. What item would you like to use on which pokemon?`;
+      case STATES.POKEMARTMODE:
+        return helper.speakAsMart(welcomePokeMart);
+      default:
+        return '';
+    }
   },
   nthroot(num: number, root: number): number {
     try {

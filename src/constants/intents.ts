@@ -4,6 +4,7 @@ export const INTENTS = {
   BAG: 'BagIntent',
   BIKE: 'BicycleIntent',
   CANCEL: 'AMAZON.CancelIntent',
+  CHECK_POKE: 'CheckPokemonIntent',
   CHOOSE_LOC: 'ChooseLocationIntent',
   CHOOSE_MOVE: 'ChooseMoveIntent',
   CHOOSE_NUM: 'ChooseNumberIntent',
