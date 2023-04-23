@@ -11,7 +11,7 @@ export function trainHandler(this: HandlerThis) {
     this.emit(':ask', response, response);
     return;
   }
-  if (this.attributes.movementState < 2) {
+  if (this.attributes.storyProgression < 2) {
     response = "You don't have any Pokemon to train! Say continue instead.";
     this.emit(':ask', response, response);
   }
@@ -19,6 +19,9 @@ export function trainHandler(this: HandlerThis) {
   const locations = this.handler.state === STATES.MOVEMENTMODE ? 'a new location' : location.adjacentLocations.join(', ');
 
   const randAction = helper.randomAction(location);
+  console.log({randAction});
+  const pokemon = location.type === 'ROUTE' ? helper.generateRandomPoke(location, party) : null;
+  console.log({ pokemon, locationType: location.type, location });
   if (randAction === 'trainer') {
     this.attributes.battle = 'trainer'; // can also be "trainer" for trainer battle, or "wild" for wild battle
     const OT = helper.generateOT();
@@ -28,16 +31,15 @@ export function trainHandler(this: HandlerThis) {
     const dialogue = helper.getRandomBattleDialogue(OT);
     this.attributes.opponentVoice = dialogue.voice;
     response = helper.speakWithVoice(dialogue.accostment, dialogue.voice);
-  } else if (randAction === 'wild') {
-    const pokemon = location.type === 'ROUTE' ? helper.generateRandomPoke(location, party) : null;
-    if (!pokemon) {
-      throw new Error('Unable to generate pokemon.');
-    }
+    const firstPokemon = this.attributes.opponentParty[0];
+    response += `${OT} sent out a level ${firstPokemon.level} ${firstPokemon.name}! `
+    response += helpBattle;
+  } else if (randAction === 'wild' && pokemon) {
     this.attributes.battle = 'wild'; // can also be "trainer" for trainer battle, or "wild" for wild battle
     this.attributes.opponentName = 'wild';
     this.attributes.opponentParty = [pokemon];
     this.handler.state = STATES.BATTLEMODE;
-    response = `Wild ${pokemon.name} appeared! Say fight to battle! ${helpBattle}`;
+    response = `Wild ${pokemon.name} appeared! ${helpBattle}`;
   } else if (randAction === 'item') {
     // get item
     const findableItems = location.items;

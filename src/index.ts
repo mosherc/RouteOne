@@ -6,8 +6,7 @@ import Alexa from 'alexa-sdk';
 import { getGender } from 'gender-detection-from-name';
 import { AvailablePokemon, Pokemon } from './constants/pokemon';
 import { AvailableItems, ITEMS, Item } from './constants/items';
-import { AvailableLocations, LOCATIONS } from './constants/locations';
-import { AvailableMoves } from './constants/move-set';
+import { LOCATIONS } from './constants/locations';
 import { HandlerThis, Sex } from './handlers/HandlerThis';
 import { STATES } from './constants/states';
 import { helper } from './helper';
@@ -40,15 +39,17 @@ import { helpNameHandler } from './handlers/helpNameHandler';
 import { trainHandler } from './handlers/trainHandler';
 import { ballShakeSound, healSound, pokemonCaughtSound, rivalBattleSound } from './constants/audio';
 import { chooseMoveHandler } from './handlers/chooseMoveHandler';
+import { chooseLocationHandler } from './handlers/chooseLocationHandler';
+import { INTENTS } from './constants/intents';
 
 // --------------- Handlers -----------------------
 
 // set state to start up and  welcome the user
 const newSessionHandler = {
-  'LaunchRequest': function (this: HandlerThis) {
+  [INTENTS.LAUNCH]: function (this: HandlerThis) {
     this.handler.state = STATES.STARTMODE;
     this.attributes.goodbyeMessage = goodbyeMessage;
-    this.attributes.movementState = 0;
+    this.attributes.storyProgression = 0;
     this.attributes.money = 0;
     this.attributes.bag = ITEMS;
     this.attributes.party = [];
@@ -60,11 +61,11 @@ const newSessionHandler = {
     // determine oak's race
     this.emit(':ask', helper.speakAsOak(welcomeMessage, isOakJapanese), helper.speakAsOak(unhandledSex, isOakJapanese));
   },
-  'AMAZON.HelpIntent': function (this: HandlerThis) {
+  [INTENTS.HELP]: function (this: HandlerThis) {
     this.handler.state = STATES.STARTMODE;
     this.emit(':ask', helpMessage, helpMessage);
   },
-  'Unhandled': function (this: HandlerThis) {
+  [INTENTS.UNHANDLED]: function (this: HandlerThis) {
     this.handler.state = STATES.STARTMODE;
     const { isOakJapanese } = this.attributes;
     this.emit(':ask', helper.speakAsOak(unhandledSex, isOakJapanese), helper.speakAsOak(repeatChooseSex, isOakJapanese));
@@ -75,32 +76,42 @@ const newSessionHandler = {
 
 // Called at the start of the game, picks and asks first question for the user
 const startGameHandlers = Alexa.CreateStateHandler(STATES.STARTMODE, {
-  'SexIntent': function (this: HandlerThis) {
+  [INTENTS.SKIP]: function (this: HandlerThis) {
+    this.handler.state = STATES.CHOOSEPOKEMONMODE;
+    this.attributes.playerName = 'Red';
+    this.attributes.sex = 'boy';
+    this.attributes.rivalName = 'Blue';
+    this.attributes.rivalSex = 'boy';
+    this.attributes.rivalPronouns = helper.getPronouns('boy');
+    this.attributes.storyProgression = 2;
+    let response = helper.speakAsOak("A little impatient, are we? Anyway, Do you choose Bulbasaur, the grass Pokemon, Charmander, the fire Pokemon, or Squirtle, the water Pokemon?", this.attributes.isOakJapanese);
+    this.emit(':ask', response, response);
+  },
+  [INTENTS.SEX]: function (this: HandlerThis) {
     this.attributes.sex = this.event.request.intent.slots.Sex.value as Sex;
-    const response = helper.speakAsOak("Let's Begin with your name. What is it?", this.attributes.isOakJapanese);
+    const response = helper.speakAsOak("Let's begin with your name. What is it?", this.attributes.isOakJapanese);
     // set state to asking name
     this.handler.state = STATES.NAMEMODE;
 
     // ask the next question
     this.emit(':ask', response, response);
   },
-  'AMAZON.NoIntent': exitHandler,
-  'AMAZON.StopIntent': exitHandler,
-  'AMAZON.CancelIntent': exitHandler,
-  'AMAZON.StartOverIntent': helpSexHandler,
-  'AMAZON.HelpIntent': helpSexHandler,
-  'Unhandled': function (this: HandlerThis) {
+  [INTENTS.NO]: exitHandler,
+  [INTENTS.STOP]: exitHandler,
+  [INTENTS.CANCEL]: exitHandler,
+  [INTENTS.START_OVER]: helpSexHandler,
+  [INTENTS.HELP]: helpSexHandler,
+  [INTENTS.UNHANDLED]: function (this: HandlerThis) {
     const response = helper.speakAsOak(unhandledSex, this.attributes.isOakJapanese);
     this.emit(':ask', response, response);
   },
 });
 
 const askNameHandlers = Alexa.CreateStateHandler(STATES.NAMEMODE, {
-  'NameIntent': function (this: HandlerThis) {
+  [INTENTS.NAME]: function (this: HandlerThis) {
     const slot = this.event.request.intent.slots.Name.value;
     const playerName = slot;
     this.attributes.playerName = playerName;
-    this.attributes.goodbyeMessage = `${playerName + this.attributes.goodbyeMessage + playerName} went home to mom to live with her forever.`;
     const response = helper.speakAsOak(
       `Right… So your name is ${playerName}. This is my grandson. He's been your rival since you both were babies. …Erm, what was his name now?`,
       this.attributes.isOakJapanese,
@@ -108,15 +119,15 @@ const askNameHandlers = Alexa.CreateStateHandler(STATES.NAMEMODE, {
     this.handler.state = STATES.RIVALMODE;
     this.emit(':ask', response, response);
   },
-  'AMAZON.HelpIntent': helpNameHandler,
-  'AMAZON.StopIntent': exitHandler,
-  'AMAZON.CancelIntent': exitHandler,
-  'AMAZON.StartOverIntent': startOverHandler,
-  'Unhandled': unhandledHandler,
+  [INTENTS.HELP]: helpNameHandler,
+  [INTENTS.STOP]: exitHandler,
+  [INTENTS.CANCEL]: exitHandler,
+  [INTENTS.START_OVER]: startOverHandler,
+  [INTENTS.UNHANDLED]: unhandledHandler,
 });
 
 const askRivalHandlers = Alexa.CreateStateHandler(STATES.RIVALMODE, {
-  'NameIntent': function (this: HandlerThis) {
+  [INTENTS.NAME]: function (this: HandlerThis) {
     const { playerName, isOakJapanese } = this.attributes;
     const slot = this.event.request.intent.slots.Name.value;
     let response = '';
@@ -131,42 +142,37 @@ const askRivalHandlers = Alexa.CreateStateHandler(STATES.RIVALMODE, {
       response = helper.speakAsOak(
         `…Er, was it ${rivalName}? Thats right! I remember now! ${this.attributes.rivalPronouns.possessive} name is ${rivalName}! ${
           rivalSex === 'girl' ? 'Oh and yes, I forgot she is a girl!' : ''
-        } ${playerName}! Your own very Pokémon legend is about to unfold! A world of dreams and adventures with Pokémon awaits! Lets go!`,
+        } ${playerName}! Your own very Pokémon legend is about to unfold! A world of dreams and adventures with Pokémon awaits! Lets go! <break/>`,
         isOakJapanese,
       );
-      response += '<break/> You speak with mom and she says: <break/>';
+      response += 'You speak with mom and she says: <break/>';
       response += helper.speakAsMom(`...Right. All ${this.attributes.sex}s leave home someday. It said so on TV. Professor Oak next door is looking for you.`);
       response += `Are you ready to continue to the lab?`;
       this.handler.state = STATES.MOVEMENTMODE;
     }
     this.emit(':ask', response, response);
   },
-  'AMAZON.HelpIntent': helpNameHandler,
-  'AMAZON.StopIntent': exitHandler,
-  'AMAZON.CancelIntent': exitHandler,
-  'AMAZON.StartOverIntent': startOverHandler,
-  'Unhandled': unhandledHandler,
+  [INTENTS.HELP]: helpNameHandler,
+  [INTENTS.STOP]: exitHandler,
+  [INTENTS.CANCEL]: exitHandler,
+  [INTENTS.START_OVER]: startOverHandler,
+  [INTENTS.UNHANDLED]: unhandledHandler,
 });
 
 const askMovementHandlers = Alexa.CreateStateHandler(STATES.MOVEMENTMODE, {
-  'AMAZON.YesIntent': function (this: HandlerThis) {
-    const { playerName, rivalName, movementState, location, rivalPronouns, rivalSex, isOakJapanese } = this.attributes;
+  [INTENTS.YES]: function (this: HandlerThis) {
+    const { playerName, rivalName, storyProgression, location, rivalPronouns, rivalSex, isOakJapanese, party } = this.attributes;
     let response;
     let reprompt;
 
-    // reset any finished battles
-    this.attributes.battle = null;
-    this.attributes.opponentName = undefined;
-    this.attributes.opponentParty = undefined;
-
     // hard code story lines tied to movement states?
-    if (movementState === 0) {
+    if (storyProgression === 0) {
       response = `You see your rival in the lab and ${rivalPronouns.subject} says: <break/>`;
-      response += helper.speakAsRival(`What? It's only ${playerName}? Gramps isn't around.`, rivalSex);
-      response += 'Would you like to continue to the grass to find some pokemon?';
+      response += helper.speakAsRival(`What? It's only ${playerName}? Gramps isn't around. <break/>`, rivalSex);
+      response += 'Would you like to continue to the grass to find some pokemon? <break/>';
       reprompt = helper.speakAsRival('Would you like to go to the grass or are you just gonna stand there, ya dummy?', rivalSex);
-      this.attributes.movementState++;
-    } else if (movementState === 1) {
+      this.attributes.storyProgression++;
+    } else if (storyProgression === 1) {
       response = helper.speakAsOak(
         `Hey! Wait! Don't go out! It's unsafe! Wild Pokemon live in tall grass! You need your own Pokemon for your protection. I know! Come with me! <break/>`,
         isOakJapanese,
@@ -174,31 +180,40 @@ const askMovementHandlers = Alexa.CreateStateHandler(STATES.MOVEMENTMODE, {
       response += `You follow Oak to the lab. <break/>`;
       response += helper.speakAsRival(`Gramps! I'm fed up with waiting! <break/>`, rivalSex);
       response += helper.speakAsOak(
-        `${rivalName}? Let me think… Oh, that's right, I told you to come! Here, ${playerName}! There are three Pokémon here. Haha! The Pokémon are held inside these Pokéballs. You can have one. Go on, choose! `,
+        `${rivalName}? Let me think… Oh, that's right, I told you to come! Here, ${playerName}! There are three Pokémon here. Haha! The Pokémon are held inside these Pokéballs. You can have one. Go on, choose! <break/>`,
         isOakJapanese,
       );
-      response += helper.speakAsRival(`Hey! Gramps! No fair! What about me?`, rivalSex);
+      response += helper.speakAsRival(`Hey! Gramps! No fair! What about me? <break/>`, rivalSex);
       response += helper.speakAsOak(
-        `Be patient ${rivalName}! Do you choose Bulbasaur, the grass Pokemon, Charmander, the fire Pokemon, or Squirtle, the water Pokemon?`,
+        `Be patient ${rivalName}! Do you choose Bulbasaur, the grass Pokemon, Charmander, the fire Pokemon, or Squirtle, the water Pokemon? <break/>`,
         isOakJapanese,
       );
       reprompt = helper.speakAsOak('Come on, choose a Pokemon already. Stupid kids...', isOakJapanese);
       this.handler.state = STATES.CHOOSEPOKEMONMODE;
-      this.attributes.movementState++;
-    } else if (movementState >= 2) {
-      // within a movementState, the player should be able to say YES to continue to next Alexa State, or no (or something else) to stay within the movementState and MOVEMENTMODE
+      this.attributes.storyProgression++;
+    } else if (storyProgression >= 2) {
+      // within a storyProgression, the player should be able to say YES to continue to next Alexa State, or no (or something else) to stay within the storyProgression and MOVEMENTMODE
       const randAction = helper.randomAction(location);
+      console.log({randAction});
+      const pokemon = location.type === 'ROUTE' ? helper.generateRandomPoke(location, party) : null;
       if (randAction === 'trainer') {
         this.attributes.battle = 'trainer'; // can also be "trainer" for trainer battle, or "wild" for wild battle
-        this.attributes.opponentName = helper.generateOT();
-        this.attributes.opponentParty = helper.generateParty(this.attributes.opponentName, this.attributes.party);
+        const OT = helper.generateOT();
+        this.attributes.opponentName = OT;
+        this.attributes.opponentParty = helper.generateParty(OT, party);
         this.handler.state = STATES.BATTLEMODE;
-      } else if (randAction === 'wild') {
-        const pokemon = location.type === 'ROUTE' ? helper.generateRandomPoke(location, this.attributes.party) : null;
+        const dialogue = helper.getRandomBattleDialogue(OT);
+        this.attributes.opponentVoice = dialogue.voice;
+        response = helper.speakWithVoice(dialogue.accostment, dialogue.voice);
+        const firstPokemon = this.attributes.opponentParty[0];
+        response += `${OT} sent out a level ${firstPokemon.level} ${firstPokemon.name}! `
+        response += helpBattle;
+      } else if (randAction === 'wild' && pokemon) {
         this.attributes.battle = 'wild'; // can also be "trainer" for trainer battle, or "wild" for wild battle
         this.attributes.opponentName = 'wild';
-        this.attributes.opponentParty = pokemon ? [pokemon] : [];
+        this.attributes.opponentParty = [pokemon];
         this.handler.state = STATES.BATTLEMODE;
+        response = `Wild ${pokemon.name} appeared! ${helpBattle}`;
       } else if (randAction === 'item') {
         // get item
         const findableItems = location.items;
@@ -207,63 +222,42 @@ const askMovementHandlers = Alexa.CreateStateHandler(STATES.MOVEMENTMODE, {
         response = `You found a ${foundItem}! You put it in your bag for safekeeping. ${helpMovement}`;
       } else {
         this.handler.state = STATES.CHOOSELOCATIONMODE;
-        response = `You did not encounter any Pokemon in ${location.name}. Where would you like to go next? There is ${location.adjacentLocations.map((loc) => loc.split('_').join(' ').toLowerCase()).join(', ')}.`;
+        response = `You did not encounter any Pokemon in ${location.name}. Where would you like to go next? There is ${helper.getAdjacentLocations(location)}.`;
       }
 
-      this.attributes.movementState++;
+      this.attributes.storyProgression++;
     }
 
     this.emit(':ask', response, reprompt);
   },
-  'BagIntent': bagHandler,
-  'TrainIntent': trainHandler,
-  'AMAZON.HelpIntent': function (this: HandlerThis) {
+  [INTENTS.BAG]: bagHandler,
+  [INTENTS.TRAIN]: trainHandler,
+  [INTENTS.HELP]: function (this: HandlerThis) {
     this.emit(':ask', helpMovement, helpMovement);
   },
-  'AMAZON.StopIntent': exitHandler,
-  'AMAZON.CancelIntent': exitHandler,
-  'AMAZON.StartOverIntent': startOverHandler,
-  'BicycleIntent': bicycleHandler,
-  'Unhandled': unhandledHandler,
+  [INTENTS.STOP]: exitHandler,
+  [INTENTS.CANCEL]: exitHandler,
+  [INTENTS.START_OVER]: startOverHandler,
+  [INTENTS.BIKE]: bicycleHandler,
+  [INTENTS.UNHANDLED]: unhandledHandler,
 });
 
 const askLocationHandlers = Alexa.CreateStateHandler(STATES.CHOOSELOCATIONMODE, {
-  'ChooseLocationIntent': function (this: HandlerThis) {
-    let response;
-    const { location } = this.attributes;
-    console.log(this.event.request.intent.slots);
-    const chosenLocationKey = helper.screamingSnake<AvailableLocations>(this.event.request.intent.slots.Location.value);
-    const chosenLocation = LOCATIONS[chosenLocationKey];
-    if (location.adjacentLocations.includes(chosenLocationKey)) {
-      const nextLocation = chosenLocation;
-      this.attributes.location = nextLocation;
-      response = `You made it safely to ${nextLocation.name}. `;
-      if (nextLocation.type === 'CITY') {
-        response += helper.getLocationActivities(nextLocation);
-        this.handler.state = STATES.CITYMODE;
-      } else {
-        response += helpMovement;
-        this.handler.state = STATES.MOVEMENTMODE;
-      }
-    } else {
-      response = `You can't go to ${chosenLocation.name} from ${location.name}. There is ${location.adjacentLocations.map((loc) => loc.split('_').join(' ').toLowerCase()).join(', ')}.`;
-    }
-    this.emit(':ask', response, response);
-  },
-  'BagIntent': bagHandler,
-  'TrainIntent': trainHandler,
-  'AMAZON.HelpIntent': function (this: HandlerThis) {
+  [INTENTS.CHOOSE_LOC]: chooseLocationHandler,
+  [INTENTS.BAG]: bagHandler,
+  [INTENTS.TRAIN]: trainHandler,
+  [INTENTS.HELP]: function (this: HandlerThis) {
     this.emit(':ask', helpMovement, helpMovement);
   },
-  'AMAZON.StopIntent': exitHandler,
-  'AMAZON.CancelIntent': exitHandler,
-  'AMAZON.StartOverIntent': startOverHandler,
-  'BicycleIntent': bicycleHandler,
-  'Unhandled': unhandledHandler,
+  [INTENTS.STOP]: exitHandler,
+  [INTENTS.CANCEL]: exitHandler,
+  [INTENTS.START_OVER]: startOverHandler,
+  [INTENTS.BIKE]: bicycleHandler,
+  [INTENTS.UNHANDLED]: unhandledHandler,
 });
 
 const askPokemonHandlers = Alexa.CreateStateHandler(STATES.CHOOSEPOKEMONMODE, {
-  'ChoosePokemonIntent': function (this: HandlerThis) {
+  [INTENTS.CHOOSE_POKE]: function (this: HandlerThis) {
     const starter = helper.screamingSnake<AvailablePokemon>(this.event.request.intent.slots.Pokemon.value);
     const { playerName, isOakJapanese } = this.attributes;
     console.log({ starter, slot: this.event.request.intent.slots.Pokemon });
@@ -288,7 +282,7 @@ const askPokemonHandlers = Alexa.CreateStateHandler(STATES.CHOOSEPOKEMONMODE, {
     response = helper.speakAsOak(response, isOakJapanese);
     this.emit(':ask', response, response);
   },
-  'AMAZON.YesIntent': function (this: HandlerThis) {
+  [INTENTS.YES]: function (this: HandlerThis) {
     let rivalStarter: AvailablePokemon;
     const { playerName, rivalName, starter, rivalSex, isOakJapanese } = this.attributes;
 
@@ -316,17 +310,17 @@ const askPokemonHandlers = Alexa.CreateStateHandler(STATES.CHOOSEPOKEMONMODE, {
 
       this.handler.state = STATES.BATTLEMODE;
       let response = `${pokemonCaughtSound} ${playerName} received the ${starterPokemon.name} from Professor Oak! Your rival walks over to the ${rivalStarterPokemon.name}. <break />`;
-      response += helper.speakAsRival(`I'll take this one then!`, rivalSex);
-      response += `${rivalName} received the ${rivalStarterPokemon.name} from Professor Oak!`;
+      response += helper.speakAsRival(`I'll take this one then! <break/>`, rivalSex);
+      response += `${rivalName} received the ${rivalStarterPokemon.name} from Professor Oak! <break/>`;
       response += helper.speakAsOak(
-        `If a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town.`,
+        `If a wild Pokemon appears, your pokemon can battle it. With it at your side, you should be able to reach the next town. <break/>`,
         isOakJapanese,
       );
       response += helper.speakAsRival(`Wait, ${playerName}! Let's check out our Pokemon! Come on, I'll take you on! ${rivalBattleSound}`, rivalSex);
-      response += `... Rival ${rivalName} would like to battle! Rival ${rivalName} sent out ${rivalStarterPokemon.name}!`;
-      response += helper.speakAsRival(`Go! ${rivalStarterPokemon.name}!`, rivalSex);
+      response += `... Rival ${rivalName} would like to battle! Rival ${rivalName} sent out ${rivalStarterPokemon.name}! <break/>`;
+      response += helper.speakAsRival(`Go! ${rivalStarterPokemon.name}! <break/>`, rivalSex);
       response += helper.speakAsOak(
-        `Oh for Pete's sake...So pushy as always. ${rivalName}. You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. Anyway, you'll learn more from experience.`,
+        `Oh for Pete's sake...So pushy as always. ${rivalName}. You've never had a Pokemon battle before have you? A Pokemon battle is when Trainers pit their Pokemon against each other. Anyway, you'll learn more from experience. <break/>`,
         isOakJapanese,
       );
       const reprompt = `What will ${playerName} do? You can say either let's fight, switch pokemon, open bag, or run away.`;
@@ -337,7 +331,7 @@ const askPokemonHandlers = Alexa.CreateStateHandler(STATES.CHOOSEPOKEMONMODE, {
       this.emit(':ask', response, response);
     }
   },
-  'AMAZON.NoIntent': function (this: HandlerThis) {
+  [INTENTS.NO]: function (this: HandlerThis) {
     if (typeof this.attributes.starter !== 'undefined') {
       this.attributes.starter = undefined;
       this.emit(':ask', 'Ok, select a different Pokemon');
@@ -345,20 +339,20 @@ const askPokemonHandlers = Alexa.CreateStateHandler(STATES.CHOOSEPOKEMONMODE, {
       this.emit(':ask', 'Choose your Pokemon');
     }
   },
-  'AMAZON.HelpIntent': function (this: HandlerThis) {
+  [INTENTS.HELP]: function (this: HandlerThis) {
     this.emit(':ask', helpChoosePokemon, helpChoosePokemon);
   },
-  'AMAZON.StopIntent': exitHandler,
-  'AMAZON.CancelIntent': exitHandler,
-  'AMAZON.StartOverIntent': startOverHandler,
-  'BicycleIntent': bicycleHandler,
-  'Unhandled': function (this: HandlerThis) {
+  [INTENTS.STOP]: exitHandler,
+  [INTENTS.CANCEL]: exitHandler,
+  [INTENTS.START_OVER]: startOverHandler,
+  [INTENTS.BIKE]: bicycleHandler,
+  [INTENTS.UNHANDLED]: function (this: HandlerThis) {
     this.emit(':ask', unhandledPokemon, unhandledPokemon);
   },
 });
 
 const battleHandlers = Alexa.CreateStateHandler(STATES.BATTLEMODE, {
-  'FightIntent': function (this: HandlerThis) {
+  [INTENTS.FIGHT]: function (this: HandlerThis) {
     const poke = this.attributes.party[0];
     const moves = poke.moveSet;
     const moveString = moves
@@ -372,8 +366,8 @@ const battleHandlers = Alexa.CreateStateHandler(STATES.BATTLEMODE, {
     this.handler.state = STATES.CHOOSEMOVEMODE;
     this.emit(':ask', response, response);
   },
-  'ChooseMoveIntent': chooseMoveHandler,
-  'SwitchPokemonIntent': function (this: HandlerThis) {
+  [INTENTS.CHOOSE_MOVE]: chooseMoveHandler,
+  [INTENTS.SWITCH]: function (this: HandlerThis) {
     let response;
     const { party } = this.attributes;
 
@@ -384,50 +378,50 @@ const battleHandlers = Alexa.CreateStateHandler(STATES.BATTLEMODE, {
       response = `You have the following healthy Pokemon: ${healthy}. Say 'switch' and the name of the Pokemon.`;
       this.emit(':ask', response, response);
     } else if (healthyArr.length === 1) {
-      response = "You don't have any other healthy Pokemon! Choose let's fight, open bag, or run away.";
+      response = `You don't have any other healthy Pokemon! ${helpBattle}`;
       this.emit(':ask', response, response);
     }
   },
-  'BagIntent': bagHandler,
-  'RunIntent': function (this: HandlerThis) {
+  [INTENTS.BAG]: bagHandler,
+  [INTENTS.RUN]: function (this: HandlerThis) {
     let response;
     if (this.attributes.battle !== 'wild') {
-      response = "Can't run away from enemy battle! Choose let's fight, open bag, or switch Pokemon.";
+      response = `Can't run away from enemy battle! ${helpBattle}`;
     } else {
       response = `Ran away safely! ${helpMovement}`;
       this.handler.state = STATES.MOVEMENTMODE;
     }
     this.emit(':ask', response, response);
   },
-  'AMAZON.HelpIntent': function (this: HandlerThis) {
+  [INTENTS.HELP]: function (this: HandlerThis) {
     this.emit(':ask', helpBattle, helpBattle);
   },
-  'AMAZON.StopIntent': exitHandler,
-  'AMAZON.CancelIntent': exitHandler,
-  'AMAZON.StartOverIntent': startOverHandler,
-  'BicycleIntent': bicycleHandler,
-  'Unhandled': unhandledHandler,
+  [INTENTS.STOP]: exitHandler,
+  [INTENTS.CANCEL]: exitHandler,
+  [INTENTS.START_OVER]: startOverHandler,
+  [INTENTS.BIKE]: bicycleHandler,
+  [INTENTS.UNHANDLED]: unhandledHandler,
 });
 
 const chooseMoveHandlers = Alexa.CreateStateHandler(STATES.CHOOSEMOVEMODE, {
-  'ChooseMoveIntent': chooseMoveHandler,
-  'GoBackIntent': function (this: HandlerThis) {
-    const response = "Ok. Say let's fight, switch pokemon, open bag, or run away.";
+  [INTENTS.CHOOSE_MOVE]: chooseMoveHandler,
+  [INTENTS.BACK]: function (this: HandlerThis) {
+    const response = helpBattle;
     this.handler.state = STATES.BATTLEMODE;
     this.emit(':ask', response, response);
   },
-  'AMAZON.HelpIntent': unhandledHandler,
-  'AMAZON.StopIntent': exitHandler,
-  'AMAZON.CancelIntent': exitHandler,
-  'AMAZON.StartOverIntent': startOverHandler,
-  'BicycleIntent': bicycleHandler,
-  'Unhandled': unhandledHandler,
+  [INTENTS.HELP]: unhandledHandler,
+  [INTENTS.STOP]: exitHandler,
+  [INTENTS.CANCEL]: exitHandler,
+  [INTENTS.START_OVER]: startOverHandler,
+  [INTENTS.BIKE]: bicycleHandler,
+  [INTENTS.UNHANDLED]: unhandledHandler,
 });
 
 const switchPokeHandlers = Alexa.CreateStateHandler(STATES.SWITCHPOKEMODE, {
-  'SwitchPokemonIntent': function (this: HandlerThis) {
+  [INTENTS.SWITCH]: function (this: HandlerThis) {
     let response = '';
-    const { party, playerName, opponentParty, opponentName, location, opponentVoice } = this.attributes;
+    const { party, playerName, opponentParty, opponentName, location, opponentVoice, rivalName, rivalSex } = this.attributes;
     let pokeIndex;
 
     // const healthyArr = helper.getHealthyParty(party);
@@ -457,30 +451,30 @@ const switchPokeHandlers = Alexa.CreateStateHandler(STATES.SWITCHPOKEMODE, {
     response += helper.attack(opp, poke, oppMove);
 
     // check if faint
-    response += helper.isFainted(playerName, opponentName, party, opponentParty, poke, true, location, opponentVoice).response;
+    const isFaineted = helper.isFainted(this.attributes, poke, true);
+    response += isFaineted.response;
 
     this.emit(':ask', response, response);
   },
-  'GoBackIntent': function (this: HandlerThis) {
+  [INTENTS.BACK]: function (this: HandlerThis) {
     const response = helpBattle;
     this.handler.state = STATES.BATTLEMODE;
     this.emit(':ask', response, response);
   },
-  'AMAZON.HelpIntent': unhandledHandler,
-  'AMAZON.StopIntent': exitHandler,
-  'AMAZON.CancelIntent': exitHandler,
-  'AMAZON.StartOverIntent': startOverHandler,
-  'BicycleIntent': bicycleHandler,
-  'Unhandled': unhandledHandler,
+  [INTENTS.HELP]: unhandledHandler,
+  [INTENTS.STOP]: exitHandler,
+  [INTENTS.CANCEL]: exitHandler,
+  [INTENTS.START_OVER]: startOverHandler,
+  [INTENTS.BIKE]: bicycleHandler,
+  [INTENTS.UNHANDLED]: unhandledHandler,
 });
 
 const bagHandlers = Alexa.CreateStateHandler(STATES.BAGMODE, {
-  'UseItemIntent': function (this: HandlerThis) {
+  [INTENTS.USE_ITEM]: function (this: HandlerThis) {
     let response = '';
     const item = helper.screamingSnake<AvailableItems>(this.event.request.intent.slots.Item.value);
     const pokeSlot = helper.screamingSnake<AvailablePokemon | undefined>(this.event.request.intent.slots.Pokemon.value);
-    const { playerName, party, opponentParty, opponentName, sex, location, opponentVoice } = this.attributes;
-    let gym = false;
+    const { playerName, party, opponentParty, opponentName, sex } = this.attributes;
     let poke: Pokemon | undefined;
 
     // need to check if Pokemon is defined, not always necessary
@@ -488,10 +482,6 @@ const bagHandlers = Alexa.CreateStateHandler(STATES.BAGMODE, {
       [poke] = party;
     } else {
       poke = party.find((p) => p.name === pokeSlot);
-    }
-
-    if (this.attributes.battle === 'gym') {
-      gym = true;
     }
 
     let chosenItem: Item | null = null;
@@ -581,7 +571,7 @@ const bagHandlers = Alexa.CreateStateHandler(STATES.BAGMODE, {
           // wild poke attacks
           const oppMove = opp.moveSet[helper.generateRandomInt(0, opp.moveSet.length - 1)];
           response += helper.attack(opp, poke, oppMove);
-          const faintRes = helper.isFainted(playerName, opponentName, party, opponentParty, poke, true, location, opponentVoice);
+          const faintRes = helper.isFainted(this.attributes, poke, true);
           this.handler.state = faintRes.state;
           response += faintRes.response;
         }
@@ -605,13 +595,13 @@ const bagHandlers = Alexa.CreateStateHandler(STATES.BAGMODE, {
       // opponent attacks
       const oppMove = opp.moveSet[helper.generateRandomInt(0, opp.moveSet.length - 1)];
       response += helper.attack(opp, poke, oppMove);
-      const faintRes = helper.isFainted(playerName, opponentName, party, opponentParty, poke, true, location, opponentVoice);
+      const faintRes = helper.isFainted(this.attributes, poke, true);
       this.handler.state = faintRes.state;
       response += faintRes.response;
     }
     this.emit(':ask', response, response);
   },
-  'GoBackIntent': function (this: HandlerThis) {
+  [INTENTS.BACK]: function (this: HandlerThis) {
     let response;
     const { prevState } = this.attributes;
     if (prevState === null) {
@@ -632,93 +622,88 @@ const bagHandlers = Alexa.CreateStateHandler(STATES.BAGMODE, {
     }
     this.emit(':ask', response, response);
   },
-  'AMAZON.HelpIntent': unhandledHandler,
-  'AMAZON.StopIntent': exitHandler,
-  'AMAZON.CancelIntent': exitHandler,
-  'AMAZON.StartOverIntent': startOverHandler,
-  'BicycleIntent': bicycleHandler,
-  'Unhandled': unhandledHandler,
+  [INTENTS.HELP]: unhandledHandler,
+  [INTENTS.STOP]: exitHandler,
+  [INTENTS.CANCEL]: exitHandler,
+  [INTENTS.START_OVER]: startOverHandler,
+  [INTENTS.BIKE]: bicycleHandler,
+  [INTENTS.UNHANDLED]: unhandledHandler,
 });
 
 const whiteOutHandlers = Alexa.CreateStateHandler(STATES.WHITEOUTMODE, {
-  'AMAZON.YesIntent': function (this: HandlerThis) {
-    const { playerName, party, rivalName, lastVisitedCity, rivalSex } = this.attributes;
+  [INTENTS.YES]: function (this: HandlerThis) {
+    const { playerName, party, isOakJapanese, lastVisitedCity, rivalSex } = this.attributes;
     let response;
 
     // heal party because whited out
-    if (this.attributes.movementState <= 2) {
-      this.attributes.battle = null;
-      this.attributes.opponentName = undefined;
-      this.attributes.opponentParty = undefined;
+    if (this.attributes.storyProgression <= 2) {
       response = helper.speakAsRival(
-        `${rivalName} says, Yeah! Am I great or what! Oak says, hmm...how disappointing...If you win, you earn prize money, and your Pokemon grow. But if you lose, ${playerName}, you end up paying prize money...However since you had no warning this time, I'll pay for you. But things won't be this way once you step out these doors. That's why you must strengthen your Pokemon by battling wild Pokemon. I'll make my Pokemon battle to toughen it up! ${playerName}! Gramps! Smell ya later!`,
+        `Yeah! Am I great or what! <break />`,
         rivalSex,
       );
-      response += `What would you like to do now? Would you like to go to Route 1?`;
+      response += helper.speakAsOak(`Hmm...how disappointing...If you win, you earn prize money, and your Pokemon grow. But if you lose, ${playerName}, you end up paying prize money...However since you had no warning this time, I'll pay for you. But things won't be this way once you step out these doors. That's why you must strengthen your Pokemon by battling wild Pokemon. <break />`, isOakJapanese);
+      response += helper.speakAsRival(`I'll make my Pokemon battle to toughen it up! ${playerName}! Gramps! Smell ya later! <break />`, rivalSex)
+      response += `Would you like to continue on your journey?`;
       helper.healTeam(party);
       this.handler.state = STATES.MOVEMENTMODE;
     } else {
       // end up back at pokemon center
       // battle is over
-      this.attributes.battle = null;
-      this.attributes.opponentName = undefined;
-      this.attributes.opponentParty = undefined;
-
       this.handler.state = STATES.POKECENTERMODE;
       this.attributes.location = lastVisitedCity;
-      response = `You were transported back to ${lastVisitedCity.name}.`;
+      response = `Your nearly dead body was transported back to ${lastVisitedCity.name} by Nurse Joy. <break />`;
       response += helper.speakAsNurse(welcomePokeCenter);
     }
     this.emit(':ask', response, response);
   },
-  'AMAZON.HelpIntent': unhandledHandler,
-  'AMAZON.StopIntent': exitHandler,
-  'AMAZON.CancelIntent': exitHandler,
-  'AMAZON.StartOverIntent': startOverHandler,
-  'BicycleIntent': bicycleHandler,
-  'Unhandled': unhandledHandler,
+  [INTENTS.HELP]: unhandledHandler,
+  [INTENTS.STOP]: exitHandler,
+  [INTENTS.CANCEL]: exitHandler,
+  [INTENTS.START_OVER]: startOverHandler,
+  [INTENTS.BIKE]: bicycleHandler,
+  [INTENTS.UNHANDLED]: unhandledHandler,
 });
 
 const pokeCenterHandlers = Alexa.CreateStateHandler(STATES.POKECENTERMODE, {
-  'AMAZON.YesIntent': function (this: HandlerThis) {
+  [INTENTS.YES]: function (this: HandlerThis) {
     const { party, location } = this.attributes;
     this.attributes.lastVisitedCity = location;
     let response = helper.speakAsNurse(
-      `Okay, I'll take your Pokemon for a few seconds. ${healSound} Thank you for waiting. We've restored your Pokemon to full health. ${seeYouAgainPokeCenter}`,
+      `Okay, I'll take your Pokemon for a few seconds. ${healSound} Thank you for waiting. We've restored your Pokemon to full health. ${seeYouAgainPokeCenter} <break />`,
     );
     response += pokeCenterNextLocation;
     helper.healTeam(party);
 
     this.emit(':ask', response, response);
   },
-  'AMAZON.NoIntent': function (this: HandlerThis) {
+  [INTENTS.NO]: function (this: HandlerThis) {
     let response = helper.speakAsNurse(seeYouAgainPokeCenter);
     response += pokeCenterNextLocation;
     this.emit(':ask', response, response);
   },
-  'HealIntent': function (this: HandlerThis) {
+  [INTENTS.HEAL]: function (this: HandlerThis) {
     const response = helper.speakAsNurse(welcomePokeCenter);
     this.emit(':ask', response, response);
   },
-  'LeaveIntent': function (this: HandlerThis) {
+  [INTENTS.LEAVE]: function (this: HandlerThis) {
     const { location } = this.attributes;
     let response = helper.speakAsNurse(seeYouAgainPokeCenter);
-    response += `You leave the PokieCenter and now you're back in ${location}. `;
+    response += `<break /> You leave the Pokemon Center and now you're back in ${location.name}. `;
     response += helper.getLocationActivities(location);
     this.handler.state = STATES.CITYMODE;
     this.emit(':ask', response, response);
   },
-  'BagIntent': bagHandler,
-  'AMAZON.HelpIntent': unhandledHandler,
-  'AMAZON.StopIntent': exitHandler,
-  'AMAZON.CancelIntent': exitHandler,
-  'AMAZON.StartOverIntent': startOverHandler,
-  'BicycleIntent': bicycleHandler,
-  'Unhandled': unhandledHandler,
+  [INTENTS.BAG]: bagHandler,
+  [INTENTS.HELP]: unhandledHandler,
+  [INTENTS.STOP]: exitHandler,
+  [INTENTS.CANCEL]: exitHandler,
+  [INTENTS.START_OVER]: startOverHandler,
+  [INTENTS.BIKE]: bicycleHandler,
+  [INTENTS.UNHANDLED]: unhandledHandler,
 });
 
 const pokeMartHandlers = Alexa.CreateStateHandler(STATES.POKEMARTMODE, {
-  'MoneyIntent': function (this: HandlerThis) {
+  [INTENTS.MONEY]: function (this: HandlerThis) {
     const { money } = this.attributes;
     let response = `You have ${money} PokieDollars. `;
     if (money < 1000) {
@@ -736,7 +721,7 @@ const pokeMartHandlers = Alexa.CreateStateHandler(STATES.POKEMARTMODE, {
     response = helper.speakAsMart(response);
     this.emit(':ask', response, response);
   },
-  'AskItemsIntent': function (this: HandlerThis) {
+  [INTENTS.ASK_ITEMS]: function (this: HandlerThis) {
     let response = 'You have the following items: ';
     const itemNames = Object.keys(ITEMS);
     for (let itemIndex = 0; itemIndex < itemNames.length - 1; itemIndex++) {
@@ -745,14 +730,14 @@ const pokeMartHandlers = Alexa.CreateStateHandler(STATES.POKEMARTMODE, {
     response += `and ${itemNames[itemNames.length - 1]}s. What would you like to buy?`;
     this.emit(':ask', response, response);
   },
-  'PurchaseIntent': function (this: HandlerThis) {
+  [INTENTS.BUY]: function (this: HandlerThis) {
     const item = String(this.event.request.intent.slots.Item.value).replace(/\s+/g, '').toLowerCase();
     this.attributes.chosenItem = ITEMS[item];
     const response = helper.speakAsMart(`You selected ${item}, which costs ${ITEMS[item].price} each. How many would you like to buy?`);
 
     this.emit(':ask', response, response);
   },
-  'ChooseNumberIntent': function (this: HandlerThis) {
+  [INTENTS.CHOOSE_NUM]: function (this: HandlerThis) {
     const num = Number(this.event.request.intent.slots.Number.value);
     const { money, chosenItem } = this.attributes;
     let response;
@@ -775,21 +760,14 @@ const pokeMartHandlers = Alexa.CreateStateHandler(STATES.POKEMARTMODE, {
     response = helper.speakAsMart(response);
     this.emit(':ask', response, response);
   },
-  'AMAZON.YesIntent': function (this: HandlerThis) {
-    const { chosenItem, money, bag, location } = this.attributes;
+  [INTENTS.YES]: function (this: HandlerThis) {
+    const { chosenItem, money, location } = this.attributes;
     let response;
     if (chosenItem === null) {
       response = unchosenItem;
     } else if (money > chosenItem.price * chosenItem.count) {
-      this.attributes.money -= chosenItem.price * chosenItem.count;
-      Object.entries(bag).forEach(([key, i]) => {
-        if (i.name === chosenItem?.name) {
-          bag[key].count += chosenItem.count;
-        }
-      });
-      this.attributes.bag = bag;
+      helper.buyItem(this.attributes);
       response = 'Thank you for your purchase! What would you like to do next? You can purchase a new item, or you can ask to leave';
-      this.attributes.chosenItem = null;
     } else {
       response = `${notEnoughMoney} Get the hell out of here!`;
       response += helper.getLocationActivities(location);
@@ -799,57 +777,63 @@ const pokeMartHandlers = Alexa.CreateStateHandler(STATES.POKEMARTMODE, {
     response = helper.speakAsMart(response);
     this.emit(':ask', response, response);
   },
-  'LeaveIntent': function (this: HandlerThis) {
+  [INTENTS.LEAVE]: function (this: HandlerThis) {
     const { location } = this.attributes;
     let response = helper.speakAsMart(`Goodbye!`);
-    response += `You leave the PokieMart and now you're back in ${location}. `;
+    response += `You leave the PokieMart and now you're back in ${location.name}. `;
     response += helper.getLocationActivities(location);
     this.handler.state = location.type === 'CITY' ? STATES.CITYMODE : STATES.MOVEMENTMODE;
     this.emit(':ask', response, response);
   },
-  'BagIntent': bagHandler,
-  'AMAZON.NoIntent': function (this: HandlerThis) {
+  [INTENTS.BAG]: bagHandler,
+  [INTENTS.NO]: function (this: HandlerThis) {
     const response = helper.speakAsMart(
       "Ok, I have canceled the order. You can ask me how much money you have, what items I have, or just tell me what you'd like to buy. Or you can get the hell outta here!",
     );
     this.attributes.chosenItem = null;
     this.emit(':ask', response, response);
   },
-  'AMAZON.HelpIntent': unhandledHandler,
-  'AMAZON.StopIntent': exitHandler,
-  'AMAZON.CancelIntent': exitHandler,
-  'AMAZON.StartOverIntent': startOverHandler,
-  'BicycleIntent': bicycleHandler,
-  'Unhandled': unhandledHandler,
+  [INTENTS.HELP]: unhandledHandler,
+  [INTENTS.STOP]: exitHandler,
+  [INTENTS.CANCEL]: exitHandler,
+  [INTENTS.START_OVER]: startOverHandler,
+  [INTENTS.BIKE]: bicycleHandler,
+  [INTENTS.UNHANDLED]: unhandledHandler,
 });
 
 const cityHandlers = Alexa.CreateStateHandler(STATES.CITYMODE, {
-  'PokeCenterIntent': function (this: HandlerThis) {
+  [INTENTS.POKE_CENTER]: function (this: HandlerThis) {
     this.handler.state = STATES.POKECENTERMODE;
     const response = helper.speakAsNurse(welcomePokeCenter);
     this.emit(':ask', response, response);
   },
-  'PokeMartIntent': function (this: HandlerThis) {
+  [INTENTS.POKE_MART]: function (this: HandlerThis) {
     this.handler.state = STATES.POKEMARTMODE;
     const response = helper.speakAsMart(welcomePokeMart);
     this.emit(':ask', response, response);
   },
-  'BagIntent': bagHandler,
-  'AMAZON.HelpIntent': unhandledHandler,
-  'AMAZON.StopIntent': exitHandler,
-  'AMAZON.CancelIntent': exitHandler,
-  'AMAZON.StartOverIntent': startOverHandler,
-  'BicycleIntent': bicycleHandler,
-  'Unhandled': unhandledHandler,
+  [INTENTS.LEAVE]: function (this: HandlerThis) {
+    this.handler.state = STATES.CHOOSELOCATIONMODE;
+    const response = `Where would you like to go next? There is ${helper.getAdjacentLocations(this.attributes.location)}`;
+    this.emit(':ask', response, response);
+  },
+  [INTENTS.CHOOSE_LOC]: chooseLocationHandler,
+  [INTENTS.BAG]: bagHandler,
+  [INTENTS.HELP]: unhandledHandler,
+  [INTENTS.STOP]: exitHandler,
+  [INTENTS.CANCEL]: exitHandler,
+  [INTENTS.START_OVER]: startOverHandler,
+  [INTENTS.BIKE]: bicycleHandler,
+  [INTENTS.UNHANDLED]: unhandledHandler,
 });
 
 const askQuestionHandlers = Alexa.CreateStateHandler(STATES.ASKMODE, {
-  'AMAZON.HelpIntent': unhandledHandler,
-  'AMAZON.StopIntent': exitHandler,
-  'AMAZON.CancelIntent': exitHandler,
-  'AMAZON.StartOverIntent': startOverHandler,
-  'BicycleIntent': bicycleHandler,
-  'Unhandled': unhandledHandler,
+  [INTENTS.HELP]: unhandledHandler,
+  [INTENTS.STOP]: exitHandler,
+  [INTENTS.CANCEL]: exitHandler,
+  [INTENTS.START_OVER]: startOverHandler,
+  [INTENTS.BIKE]: bicycleHandler,
+  [INTENTS.UNHANDLED]: unhandledHandler,
 });
 
 // Called when the session starts.

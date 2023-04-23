@@ -5,35 +5,37 @@ import { Location } from '../constants/locations';
 import { VoiceName } from '../constants/trainers';
 
 export type Sex = 'boy' | 'girl';
-export type HandlerThis = {
-  attributes: {
-    bag: typeof ITEMS;
-    battle: 'first' | 'wild' | 'trainer' | 'gym' | null;
-    chosenItem: Item | null;
-    goodbyeMessage: string;
-    isOakJapanese: boolean;
-    lastVisitedCity: Location;
-    location: Location;
-    money: number;
-    movementState: number;
-    opponentName: string | undefined;
-    opponentParty: Pokemon[] | undefined;
-    opponentVoice: VoiceName;
-    party: Pokemon[];
-    playerName: string;
-    prevState: (typeof STATES)[keyof typeof STATES] | null;
-    rivalName: string;
-    rivalPronouns: {
-      possessive: 'his' | 'her';
-      subject: 'he' | 'she';
-      object: 'him' | 'her';
-      child: 'son' | 'daughter';
-      grandChild: 'grandson' | 'granddaughter';
-    };
-    rivalSex: Sex;
-    sex: Sex;
-    starter: AvailablePokemon | undefined;
+export type SessionAttr = {
+  bag: typeof ITEMS;
+  battle: 'first' | 'wild' | 'trainer' | 'gym' | null;
+  chosenItem: Item | null;
+  goodbyeMessage: string;
+  isOakJapanese: boolean;
+  lastVisitedCity: Location;
+  location: Location;
+  money: number;
+  storyProgression: number;
+  opponentName: string;
+  opponentParty: Pokemon[];
+  opponentVoice: VoiceName;
+  party: Pokemon[];
+  playerName: string;
+  prevState: (typeof STATES)[keyof typeof STATES] | null;
+  rivalName: string;
+  rivalPronouns: {
+    possessive: 'his' | 'her';
+    subject: 'he' | 'she';
+    object: 'him' | 'her';
+    child: 'son' | 'daughter';
+    grandChild: 'grandson' | 'granddaughter';
   };
+  rivalSex: Sex;
+  sex: Sex;
+  starter: AvailablePokemon | undefined;
+};
+
+export type HandlerThis = {
+  attributes: SessionAttr;
   event: {
     request: {
       intent: {

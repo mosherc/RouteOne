@@ -1,10 +1,10 @@
-import { AvailableMoves } from "../constants/move-set";
-import { STATES } from "../constants/states";
-import { helper } from "../helper";
-import { HandlerThis } from "./HandlerThis";
+import { AvailableMoves } from '../constants/move-set';
+import { STATES } from '../constants/states';
+import { helper } from '../helper';
+import { HandlerThis } from './HandlerThis';
 
 export function chooseMoveHandler(this: HandlerThis) {
-  const { party, opponentParty, opponentName, playerName, location } = this.attributes;
+  const { party, opponentParty, opponentName, playerName, location, opponentVoice, rivalName, rivalSex } = this.attributes;
   if (!opponentParty || !opponentName) {
     throw new Error('opponentParty or opponentName not defined in ChooseMoveIntent');
   }
@@ -25,25 +25,25 @@ export function chooseMoveHandler(this: HandlerThis) {
       if (poke.stats.speed > opp.stats.speed) {
         // playerFirst();
         response += helper.attack(poke, opp, move);
-        let faintRes = helper.isFainted(playerName, opponentName, party, opponentParty, opp, false, location);
+        let faintRes = helper.isFainted(this.attributes, opp, false);
         response += faintRes.response;
         this.attributes.money += faintRes.money;
         this.handler.state = faintRes.state;
         if (!faintRes.fainted) {
           response += helper.attack(opp, poke, oppMove);
-          faintRes = helper.isFainted(playerName, opponentName, party, opponentParty, poke, true, location);
+          faintRes = helper.isFainted(this.attributes, poke, true);
           this.handler.state = faintRes.state;
           response += faintRes.response;
         }
       } else if (poke.stats.speed < opp.stats.speed) {
         // playerSecond();
         response += helper.attack(opp, poke, oppMove);
-        let faintRes = helper.isFainted(playerName, opponentName, party, opponentParty, poke, false, location);
+        let faintRes = helper.isFainted(this.attributes, poke, false);
         response += faintRes.response;
         this.handler.state = faintRes.state;
         if (!faintRes.fainted) {
           response += helper.attack(poke, opp, move);
-          faintRes = helper.isFainted(playerName, opponentName, party, opponentParty, opp, true, location);
+          faintRes = helper.isFainted(this.attributes, opp, true);
           this.handler.state = faintRes.state;
           response += faintRes.response;
         }
@@ -51,24 +51,24 @@ export function chooseMoveHandler(this: HandlerThis) {
         // randomly choose who goes first
         // playerFirst();
         response += helper.attack(poke, opp, move);
-        let faintRes = helper.isFainted(playerName, opponentName, party, opponentParty, opp, false, location);
+        let faintRes = helper.isFainted(this.attributes, opp, false);
         response += faintRes.response;
         this.handler.state = faintRes.state;
         if (!faintRes.fainted) {
           response += helper.attack(opp, poke, oppMove);
-          faintRes = helper.isFainted(playerName, opponentName, party, opponentParty, poke, true, location);
+          faintRes = helper.isFainted(this.attributes, poke, true);
           this.handler.state = faintRes.state;
           response += faintRes.response;
         }
       } else {
         // playerSecond();
         response += helper.attack(opp, poke, oppMove);
-        let faintRes = helper.isFainted(playerName, opponentName, party, opponentParty, poke, false, location);
+        let faintRes = helper.isFainted(this.attributes, poke, false);
         response += faintRes.response;
         this.handler.state = faintRes.state;
         if (!faintRes.fainted) {
           response += helper.attack(poke, opp, move);
-          faintRes = helper.isFainted(playerName, opponentName, party, opponentParty, opp, true, location);
+          faintRes = helper.isFainted(this.attributes, opp, true);
           this.handler.state = faintRes.state;
           response += faintRes.response;
         }

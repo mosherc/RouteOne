@@ -1,12 +1,12 @@
 import { deburr } from 'lodash';
 import { DAMAGE_MODIFIERS, DamageModifiers } from './constants/damage-modifiers';
-import { ITEMS } from './constants/items';
+import { ITEMS, Item } from './constants/items';
 import { Route, LOCATIONS, Location } from './constants/locations';
 import { Move, StatName, ModifierName, AvailableMoves, MOVE_SET } from './constants/move-set';
 import { Pokemon, POKEDEX, AVAILABLE_POKEMON, AvailablePokemon } from './constants/pokemon';
 import { STATES } from './constants/states';
 import { TYPE_CHART } from './constants/type-chart';
-import { Sex } from './handlers/HandlerThis';
+import { SessionAttr, Sex } from './handlers/HandlerThis';
 import { helpBattle } from './constants/messages';
 import { TRAINER_ACCOSTMENTS, TRAINER_DEFEATS, VOICE_NAMES, VoiceName, youngsterJoey } from './constants/trainers';
 
@@ -21,6 +21,10 @@ export const helper = {
     return [exp, leveledUp];
   },
   attack(poke: Pokemon, opp: Pokemon, move: Move) {
+    if (!move) {
+      console.log({ poke, opp, move });
+      throw new Error(`Poke does not have requested move! Maybe it doesn't have a learnSet?`);
+    }
     let response = '';
     response += `${poke.OT}'s ${poke.name} used ${move.name}! `;
     if (move.category === 'PHYSICAL' || move.category === 'SPECIAL') {
@@ -35,7 +39,7 @@ export const helper = {
           const maxHp = helper.getMaxHp(opp);
           const newHp = prevHp - damage;
           const percentHp = Math.floor((newHp / maxHp) * 100);
-          if (percentHp < 25) {
+          if (percentHp < 34) {
             response += `${opp.name} only has ${newHp} H P left! `;
           }
         }
@@ -53,6 +57,13 @@ export const helper = {
       }
     }
     return response;
+  },
+  buyItem(ctx: SessionAttr) {
+    if (ctx.chosenItem) {
+      ctx.money -= ctx.chosenItem?.price * ctx.chosenItem.count;
+      this.incrementItem(ctx);
+      ctx.chosenItem = null;
+    }
   },
   calcCritMultiplier() {
     return Math.random() <= 0.0625 ? 2 : 1;
@@ -133,28 +144,25 @@ export const helper = {
     }
     return levelUp;
   },
-  endBattle(party: Pokemon[]) {
+  endBattle(opponentParty: Pokemon[]): number {
     // don't reset health
     // don't reset pp
     let moneyMult = 0;
     // reset stat modifiers and stats for each pokemon
-    party.forEach(function (poke) {
+    opponentParty.forEach(function (poke) {
       helper.resetStats(poke);
       moneyMult += poke.level;
     });
-    // reset battle setup for opponent
 
-    // add money!
-    const money = Math.round(Math.random() * 25 * moneyMult + 30 * moneyMult);
-
-    return money;
+    // return the amount of money
+    return Math.round(Math.random() * 25 * moneyMult + 30 * moneyMult);
   },
   generateOT: () => {
     const names = ['Joey', 'Jesse', 'James', 'Tobey', 'Jennie', 'Jack', 'Jill', 'Marcus', ...VOICE_NAMES];
     return names[helper.generateRandomInt(0, names.length - 1)];
   },
   generateParty(OT: string, playerParty: Pokemon[]) {
-    const size = helper.generateRandomInt(1, 6);
+    const size = helper.generateRandomInt(1, playerParty.length);
     const party: Pokemon[] = [];
     for (let i = 1; i <= size; i++) {
       // should probably generate pokemon not completely randomly
@@ -172,7 +180,11 @@ export const helper = {
     const partyLevels = playerParty.map((poke) => poke.level);
     const maxLevel = Math.max(...partyLevels);
     const minLevel = Math.min(...partyLevels);
-    const level = OT === 'wild' ? helper.generateRandomInt(minLevel, maxLevel) : helper.generateRandomInt(minLevel, Math.floor(maxLevel * 1.2));
+    const medianLevel = partyLevels[Math.floor(partyLevels.length / 2)];
+    const level =
+      OT === 'wild'
+        ? helper.generateRandomInt(Math.floor(minLevel * 0.67), Math.floor(medianLevel * 1.1))
+        : helper.generateRandomInt(Math.floor(medianLevel * 0.75), Math.floor(maxLevel * 1.2));
     return level;
   },
   // name is official name of pokemon, starter is boolean true if pokemon is a starter (level 5) wild is boolean for wild (true) or not (false)
@@ -250,17 +262,21 @@ export const helper = {
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
   },
-  generateRandomPoke(location: Route, playerParty: Pokemon[]): Pokemon | null {
+  generateRandomPoke(location: Route, playerParty: Pokemon[]): Pokemon {
     const pokeOnRoute = Object.keys(location.pokemon) as unknown as AvailablePokemon[];
-    const rand = Math.random() * 100;
+    const rand = Math.random() * Object.values(location.pokemon).reduce((a, b) => a + b, 0);
     let comparison = 0;
+    let chosenPoke;
     pokeOnRoute.forEach((poke) => {
       comparison += location.pokemon[poke] ?? 0;
       if (rand < comparison) {
-        return helper.generatePokemon(poke, 'wild', helper.generateLevelFromPlayerParty('wild', playerParty));
+        chosenPoke = poke;
       }
     });
-    return null;
+    // if math doesn't work out, return random pokemon on route
+    chosenPoke = chosenPoke ?? pokeOnRoute[helper.generateRandomInt(0, pokeOnRoute.length - 1)];
+
+    return helper.generatePokemon(chosenPoke, 'wild', helper.generateLevelFromPlayerParty('wild', playerParty));
   },
   getAdjacentLocations(location: Location) {
     return location.adjacentLocations.map((loc) => LOCATIONS[loc].name).join(', ');
@@ -277,7 +293,7 @@ export const helper = {
       }
     });
     response += location.buildings.length > 0 ? ' or ' : '';
-    response += `go to another area, ${helper.getAdjacentLocations(location)}. `;
+    response += `you can ask to leave the area to get to ${helper.getAdjacentLocations(location)}. `;
     return response;
   },
   getEffectivity(effectivity: number) {
@@ -339,8 +355,8 @@ export const helper = {
       return youngsterJoey;
     }
     return {
-      accostment: TRAINER_ACCOSTMENTS[helper.generateRandomInt(0, TRAINER_ACCOSTMENTS.length - 1)],
-      defeat: TRAINER_DEFEATS[helper.generateRandomInt(0, TRAINER_DEFEATS.length - 1)],
+      accostment: `${TRAINER_ACCOSTMENTS[helper.generateRandomInt(0, TRAINER_ACCOSTMENTS.length - 1)]} `,
+      defeat: `${TRAINER_DEFEATS[helper.generateRandomInt(0, TRAINER_DEFEATS.length - 1)]} `,
       voice: VOICE_NAMES[helper.generateRandomInt(0, VOICE_NAMES.length - 1)],
     };
   },
@@ -431,23 +447,21 @@ export const helper = {
     });
     // reset status such as sleep or paralysis
   },
+  incrementItem({ bag, chosenItem }: SessionAttr, item?: Item) {
+    Object.entries(bag).forEach(([key, i]) => {
+      if (i.name === (item ?? chosenItem)?.name) {
+        bag[key].count += (item ?? chosenItem)?.count;
+      }
+    });
+  },
   // checks to see if POKE has fainted, either can own it
   // playerName should always be the Alexa player, oppName should always be opponent's name, etc., but poke is the poke to check if fainted
-  isFainted(
-    playerName: string,
-    oppName: string,
-    party: Pokemon[],
-    oppParty: Pokemon[],
-    poke: Pokemon,
-    second: boolean,
-    location: Location,
-    oppVoice: VoiceName,
-  ) {
+  isFainted(ctx: SessionAttr, poke: Pokemon, second: boolean) {
+    let { playerName, opponentName, party, opponentParty, location, opponentVoice, rivalName, rivalSex, storyProgression, isOakJapanese } = ctx;
     let response = '';
     let healthyArr;
     const playerPoke = party[0];
     let opp;
-    // let explvl;
     let money = 0;
     let fainted = false;
     let state;
@@ -461,9 +475,9 @@ export const helper = {
         healthyArr = helper.getHealthyParty(party);
 
         if (healthyArr.length === 0) {
-          money = Math.floor(0.333 * helper.endBattle(party));
+          money = Math.floor(0.333 * helper.endBattle(opponentParty));
           response += `${playerName} is out of usable Pokemon! ${playerName} blacked out! ${playerName} dropped ${money} PokieDollars and ran off! Do you still want to continue?`;
-          money = -money;
+          ctx.money = -money;
           state = STATES.WHITEOUTMODE;
         } else {
           response += `You have the following Pokemon left: ${healthyArr.join(' ')}. Please say 'switch' and then the Pokemon's name in order to switch them. `;
@@ -476,29 +490,53 @@ export const helper = {
         response += hasLeveledUp ? `${playerPoke.name} went up to level ${playerPoke.level}! ` : '';
         if (poke.OT === 'wild') {
           // wild pokemon fainted and battle is over
-          helper.endBattle(party);
+          helper.endBattle(opponentParty);
           state = STATES.BATTLEOVERMODE;
         } else {
           // pokemon is owned by trainer, must check to switch out or battle is over
-          const oppHealthyParty = helper.getHealthyParty(oppParty);
+          const oppHealthyParty = helper.getHealthyParty(opponentParty);
           if (oppHealthyParty.length >= 1) {
             // opp has a healthy pokemon left
             let pokeIndex;
-            for (pokeIndex = 0; pokeIndex < oppParty.length; pokeIndex++) {
-              if (oppParty[pokeIndex].stats.hp > 0) {
+            for (pokeIndex = 0; pokeIndex < opponentParty.length; pokeIndex++) {
+              if (opponentParty[pokeIndex].stats.hp > 0) {
                 break;
               }
             }
-            helper.switchPokemon(oppParty, 0, pokeIndex);
-            response += `${oppParty[0].OT} sent out ${oppParty[0]}! `;
+            helper.switchPokemon(opponentParty, 0, pokeIndex);
+            response += `${opponentParty[0].OT} sent out ${opponentParty[0].name}! `;
             response += helpBattle;
           } else {
             // opp has been defeated
-            money = helper.endBattle(party);
-            response += `${playerName} earned ${money} PokieDollars from ${oppName}. `;
+            const earnedMoney = helper.endBattle(opponentParty);
+            ctx.money += earnedMoney;
+            response += `${playerName} earned ${earnedMoney} PokieDollars from ${opponentName}. You now have ${ctx.money} dollars. `;
 
             // Trainer should be able to make witty response!
-            response += helper.speakWithVoice(helper.getRandomBattleDialogue(opp.OT).defeat, oppVoice);
+            const { defeat, voice } = helper.getRandomBattleDialogue(opp.OT);
+            response += opp.OT === rivalName ? helper.speakAsRival(defeat, rivalSex) : helper.speakWithVoice(defeat, opponentVoice ?? voice);
+
+            if (opp.OT === rivalName) {
+              response += helper.speakAsRival(`Anyway, I'll heal your pokemon for you, but only because gramps makes me! Smell ya later! <break />`, rivalSex);
+              helper.healTeam(party);
+              if (storyProgression <= 2) {
+                // Professor oak should give the player 5 pokeballs
+                response += helper.speakAsOak(
+                  `Before you head out ${playerName}, take these pokeballs and potions to start your journey. Good luck! <break />`,
+                  isOakJapanese,
+                );
+                console.log(ctx.bag);
+                helper.incrementItem(ctx, {
+                  ...ITEMS.POKEBALL,
+                  count: 5,
+                });
+                helper.incrementItem(ctx, {
+                  ...ITEMS.POTION,
+                  count: 5,
+                });
+                console.log(ctx.bag);
+              }
+            }
 
             state = STATES.BATTLEOVERMODE;
           }
@@ -543,12 +581,15 @@ export const helper = {
     }
   },
   randomAction(location: Location) {
-    const probNothingHappens = 60;
-    if (location.type !== 'ROUTE') {
+    const probNothingHappens = 40;
+    let rand = Math.random() * 100;
+    console.log({ randomNumberForNothing: rand });
+    if (location.type !== 'ROUTE' || rand <= probNothingHappens) {
       return null;
     }
-    const range = location.trainers + location.grass + location.items.length + probNothingHappens;
-    const rand = Math.random() * range;
+    const range = location.trainers + location.grass + location.items.length;
+    rand = Math.random() * range;
+    console.log({ randomNumberForAction: rand, range });
     if (rand < location.trainers) {
       return 'trainer';
     }
@@ -558,10 +599,10 @@ export const helper = {
     if (rand < location.trainers + location.grass + location.items.length) {
       return 'item';
     }
-    return null;
+    return 'wild';
   },
   resetStats(poke: Pokemon) {
-    poke.stats.hp = helper.getMaxHp(poke);
+    // poke.stats.hp = helper.getMaxHp(poke);
     poke.stats.spdef = helper.getMaxStat(poke, 'spdef');
     poke.stats.spatk = helper.getMaxStat(poke, 'spatk');
     poke.stats.def = helper.getMaxStat(poke, 'def');
