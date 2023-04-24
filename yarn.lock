@@ -280,53 +280,12 @@ array.prototype.flatmap@^1.3.1:
     es-abstract "^1.20.4"
     es-shim-unscopables "^1.0.0"
 
-ask-sdk-core@^2.14.0:
-  version "2.14.0"
-  resolved "https://registry.yarnpkg.com/ask-sdk-core/-/ask-sdk-core-2.14.0.tgz#85fce330b513fdb6c3827f47f0795288f2ca96d6"
-  integrity sha512-G2yEKbY+XYTFzJXGRpsg7xJHqqgBcgnKEgklXUMRWRFv10gwHgtWDLLlBV6h4IdysTx782rCVJK/UcHcaGbEpA==
-  dependencies:
-    ask-sdk-runtime "^2.14.0"
-
-ask-sdk-dynamodb-persistence-adapter@^2.14.0:
-  version "2.14.0"
-  resolved "https://registry.yarnpkg.com/ask-sdk-dynamodb-persistence-adapter/-/ask-sdk-dynamodb-persistence-adapter-2.14.0.tgz#1f6084d508b7ab080d7290bac16501c0a84bde01"
-  integrity sha512-ZEwZ/ijyzUy+U2/L/L3EtFSBbwg3oLqECW3DtWT5udigFnEAFGEtT7j9iQ3sQw1R2NdIE4R3c4ALH+sngWrZdQ==
-  dependencies:
-    aws-sdk "^2.163.0"
-
-ask-sdk-model@^1.29.0:
-  version "1.66.0"
-  resolved "https://registry.yarnpkg.com/ask-sdk-model/-/ask-sdk-model-1.66.0.tgz#bbc0fbcce7e5600b83fbc9fc548f59f19851c630"
-  integrity sha512-AZxzu4ZwC0TXUYLgaYngJ0ZU23z2KxMgIgZLjdrNfW4kRdifT1SQprb+neVOrhw80wCUC34QWZbWcBP3wl2/8w==
-
-ask-sdk-runtime@^2.14.0:
-  version "2.14.0"
-  resolved "https://registry.yarnpkg.com/ask-sdk-runtime/-/ask-sdk-runtime-2.14.0.tgz#ac28baf04802c1b0f4961cdb0d805d136f97fa01"
-  integrity sha512-a96pPs1RU3GgXBHplqAVqh2uxEuSYjTD5+XSbHsf6Fz4KhHpgaxJogOIIybjA6O/d1B9sG+6bjHJGzxBJEcccA==
-
-ask-sdk-v1adapter@^2.14.0:
-  version "2.14.0"
-  resolved "https://registry.yarnpkg.com/ask-sdk-v1adapter/-/ask-sdk-v1adapter-2.14.0.tgz#7530420b2cb8d7acc6053289d166543379120279"
-  integrity sha512-RHQ+cfkV5dXAKE95lm79cNNegLPvijHTQ2BpJ9Qv9mJ6B5vvSqLoCBfae0ZCMejl11Hyz8S+aULbkEvPmYvFRA==
-  dependencies:
-    i18next "^3.4.1"
-    i18next-sprintf-postprocessor "^0.2.2"
-
-ask-sdk@^2.14.0:
-  version "2.14.0"
-  resolved "https://registry.yarnpkg.com/ask-sdk/-/ask-sdk-2.14.0.tgz#4223dd561666443a985c83f098f28be0281ad566"
-  integrity sha512-EaX1EF59hmtGzuRYybZ9Xyim11PxZwX2T2cYAyBYbv8+v+7gf8gCAmhjXIJV+UA71gIVbtbBEKIFKDhwc+h1rA==
-  dependencies:
-    ask-sdk-core "^2.14.0"
-    ask-sdk-dynamodb-persistence-adapter "^2.14.0"
-    ask-sdk-model "^1.29.0"
-
 available-typed-arrays@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/available-typed-arrays/-/available-typed-arrays-1.0.5.tgz#92f95616501069d07d10edb2fc37d3e1c65123b7"
   integrity sha512-DMD0KiN46eipeziST1LPP/STfDU0sufISXmjSgvVsoU2tqxctQeASejWcfNtxYKqETM1UxQ8sp2OrSBWpHY6sw==
 
-aws-sdk@^2.163.0, aws-sdk@^2.4.7:
+aws-sdk@^2.4.7:
   version "2.1363.0"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1363.0.tgz#30c3b7fe999ee2ba1103a533ea27e1b0f5708e1f"
   integrity sha512-M2MZZXehgi/EMQv5GlzRkn3TlhoOYHg2cYdSAAqhjv67WaEG50MjaQy5vRvfN1i8XvB24aJFJ5pCrx69TaCaIg==

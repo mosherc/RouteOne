@@ -1,4 +1,4 @@
-import { CreateStateHandler } from "ask-sdk-v1adapter";
+import { CreateStateHandler } from "alexa-sdk";
 import { healSound } from "../constants/audio";
 import { INTENTS } from "../constants/intents";
 import { seeYouAgainPokeCenter, pokeCenterNextLocation, welcomePokeCenter } from "../constants/messages";

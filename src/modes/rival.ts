@@ -1,4 +1,4 @@
-import { CreateStateHandler } from "ask-sdk-v1adapter";
+import { CreateStateHandler } from "alexa-sdk";
 import { getGender } from "gender-detection-from-name";
 import { INTENTS } from "../constants/intents";
 import { STATES } from "../constants/states";

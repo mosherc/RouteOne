@@ -1,4 +1,4 @@
-import { CreateStateHandler } from "ask-sdk-v1adapter";
+import { CreateStateHandler } from "alexa-sdk";
 import { INTENTS } from "../constants/intents";
 import { helpBattle, helpMovement } from "../constants/messages";
 import { STATES } from "../constants/states";

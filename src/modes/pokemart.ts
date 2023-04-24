@@ -1,4 +1,4 @@
-import { CreateStateHandler } from "ask-sdk-v1adapter";
+import { CreateStateHandler } from "alexa-sdk";
 import { INTENTS } from "../constants/intents";
 import { ITEMS } from "../constants/items";
 import { unchosenItem, notEnoughMoney } from "../constants/messages";
