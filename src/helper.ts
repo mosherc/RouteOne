@@ -17,9 +17,11 @@ export const helper = {
     const L = opp.level;
     const exp = Math.floor((a * b * L) / 7);
     poke.experience = +poke.experience + exp;
-    helper.calcStatsIncrease(poke);
     helper.calcEffortYield(poke, opp);
     const levelsUp = helper.checkLevelUp(poke);
+    Array.from({ length: levelsUp }, () => {
+      helper.calcStatsIncrease(poke);
+    });
     return [exp, levelsUp];
   },
   attack(poke: Pokemon, opp: Pokemon, move: Move) {
