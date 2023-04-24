@@ -24,6 +24,7 @@
     "typescript": "^5.0.4"
   },
   "scripts": {
+    "build:clean": "rm -rf dist && yarn build",
     "build": "tsc",
     "zip": "rm -f dist.zip && zip -r dist.zip .",
     "postbuild": "cp package.json dist/package.json && cd dist && yarn install --production && yarn zip",

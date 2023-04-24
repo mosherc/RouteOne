@@ -11,14 +11,16 @@ import { helpBattle, helpMovement, welcomePokeCenter, welcomePokeMart } from './
 import { TRAINER_ACCOSTMENTS, TRAINER_DEFEATS, VOICE_NAMES, VoiceName, youngsterJoey } from './constants/trainers';
 
 export const helper = {
-  addExperience(poke: Pokemon, opp: Pokemon): [number, boolean] {
+  addExperience(poke: Pokemon, opp: Pokemon): [number, number] {
     const a = opp.OT === 'wild' ? 1 : 1.5;
     const b = poke.baseExp;
     const L = opp.level;
     const exp = Math.floor((a * b * L) / 7);
     poke.experience = +poke.experience + exp;
-    const leveledUp = helper.checkLevelUp(poke);
-    return [exp, leveledUp];
+    helper.calcStatsIncrease(poke);
+    helper.calcEffortYield(poke, opp);
+    const levelsUp = helper.checkLevelUp(poke);
+    return [exp, levelsUp];
   },
   attack(poke: Pokemon, opp: Pokemon, move: Move) {
     if (!move) {
@@ -94,6 +96,17 @@ export const helper = {
     });
     return mult;
   },
+  calcEffortYield(poke: Pokemon, opp: Pokemon) {
+    // Each pokemon yields 1 - 3 effort values
+    // TODO - use more sophisticated calculation
+    const totalEffortYield = helper.generateRandomInt(1, 3);
+    Array.from({ length: totalEffortYield }, () => {
+      // get random stat from Object.keys(opp.stats)
+      const statNames = Object.keys(opp.stats) as StatName[];
+      const stat = statNames[helper.generateRandomInt(0, statNames.length - 1)];
+      poke.effortValues[stat] += 1;
+    })
+  },
   calcRandDamage() {
     return 1 - Math.random() * 0.15;
   },
@@ -106,23 +119,28 @@ export const helper = {
     }
     return Math.floor(Math.floor(((2 * poke.base[stat] + poke.individualValues[stat] + Math.floor(poke.effortValues[stat] / 4)) * poke.level) / 100) + 5);
   },
+  calcStatIncrease(poke: Pokemon, stat: StatName) {
+    poke.stats[stat] += 0.02 * poke.base[stat] + 0.01 * (poke.individualValues[stat] + poke.effortValues[stat]);
+  },
+  calcStatsIncrease(poke: Pokemon) {
+    // TODO - current HP and HP stat need to be separated!!!
+    Object.keys(poke.stats).forEach((stat) => helper.calcStatIncrease(poke, stat as StatName));
+  },
   calcStatusEffect(poke: Pokemon, stat: StatName, value: DamageModifiers): string {
     let response = '';
     console.log({ stat, mods: poke.modifiers });
     const modifierValue = poke.modifiers[stat];
-    if (modifierValue) {
-      console.log({ modifierValue });
-      if (modifierValue < 6 || modifierValue > -6) {
-        const newStatValue = Math.min(-6, Math.max(6, value)) as DamageModifiers;
-        poke.modifiers[stat] += newStatValue;
-        console.log({ newStatValue, calcdStat: DAMAGE_MODIFIERS[modifierValue] * helper.calcStat(poke, stat) });
-        poke.stats[stat] = DAMAGE_MODIFIERS[modifierValue] * helper.calcStat(poke, stat);
-        response = helper.getStatusEffect(poke, stat, newStatValue);
-      } else if (modifierValue >= 6) {
-        response = `${poke.name}'s ${stat} won't go higher! `;
-      } else if (modifierValue <= -6) {
-        response = `${poke.name}'s ${stat} won't go lower! `;
-      }
+    if (modifierValue < 6 || modifierValue > -6) {
+      const newStatValue = Math.min(-6, Math.max(6, value)) as DamageModifiers;
+      poke.modifiers[stat] += newStatValue;
+      console.log({ newStatValue, calcdStat: DAMAGE_MODIFIERS[modifierValue] * helper.calcStat(poke, stat) });
+      // TODO - something is wrong here - should this be base stat?
+      poke.stats[stat] = DAMAGE_MODIFIERS[modifierValue] * helper.calcStat(poke, stat);
+      response = helper.getStatusEffect(poke, stat, newStatValue);
+    } else if (modifierValue >= 6) {
+      response = `${poke.name}'s ${stat} won't go higher! `;
+    } else if (modifierValue <= -6) {
+      response = `${poke.name}'s ${stat} won't go lower! `;
     }
     return response;
   },
@@ -140,13 +158,13 @@ export const helper = {
     return !Object.values(bag).some((item) => item.count > 0);
   },
   checkLevelUp(poke: Pokemon) {
-    let levelUp = false;
+    let levelsUp = 0;
     const level = Math.floor(helper.nthroot(poke.experience, 3));
     if (level > poke.level) {
       poke.level++;
-      levelUp = true;
+      levelsUp++;
     }
-    return levelUp;
+    return levelsUp;
   },
   endBattle(opponentParty: Pokemon[]): number {
     // don't reset health
@@ -500,9 +518,9 @@ export const helper = {
         }
       } else {
         opp = poke;
-        const [experience, hasLeveledUp] = helper.addExperience(playerPoke, opp);
+        const [experience, levelsUp] = helper.addExperience(playerPoke, opp);
         response += `${playerName} defeated ${poke.OT === 'wild' ? 'wild' : `${poke.OT}'s`} ${poke.name}! ${playerPoke.name} gained ${experience} experience. `;
-        response += hasLeveledUp ? `${playerPoke.name} went up to level ${playerPoke.level}! ` : '';
+        response += levelsUp > 0 ? `${playerPoke.name} went up to level ${playerPoke.level}! ` : '';
         if (poke.OT === 'wild') {
           // wild pokemon fainted and battle is over
           helper.endBattle(opponentParty);

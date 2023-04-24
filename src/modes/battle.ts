@@ -6,6 +6,7 @@ import { HandlerThis, chooseMoveHandler, bagHandler, exitHandler, startOverHandl
 import { helper } from "../helper";
 
 export const battleHandlers = CreateStateHandler(STATES.BATTLEMODE, {
+  // TODO - add cheat mode to win battle
   [INTENTS.FIGHT]: function (this: HandlerThis) {
     this.attributes.playerPokemon = this.attributes.party[0];
 

@@ -39,7 +39,7 @@ export function trainHandler(this: HandlerThis) {
     this.attributes.opponentName = 'wild';
     this.attributes.opponentParty = [pokemon];
     this.handler.state = STATES.BATTLEMODE;
-    response = `Wild ${pokemon.name} appeared! ${helpBattle}`;
+    response = `Wild level ${pokemon.level} ${pokemon.name} appeared! ${helpBattle}`;
   } else if (randAction === 'item') {
     // get item
     const findableItems = location.items;

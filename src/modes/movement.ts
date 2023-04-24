@@ -2,7 +2,7 @@ import { CreateStateHandler } from "alexa-sdk";
 import { INTENTS } from "../constants/intents";
 import { helpBattle, helpMovement } from "../constants/messages";
 import { STATES } from "../constants/states";
-import { HandlerThis, bagHandler, trainHandler, exitHandler, startOverHandler, bicycleHandler, unhandledHandler, checkPokeHandler } from "../handlers";
+import { HandlerThis, bagHandler, trainHandler, exitHandler, startOverHandler, bicycleHandler, unhandledHandler, checkPokeHandler, chooseLocationHandler } from "../handlers";
 import { helper } from "../helper";
 
 export const askMovementHandlers = CreateStateHandler(STATES.MOVEMENTMODE, {
@@ -76,6 +76,7 @@ export const askMovementHandlers = CreateStateHandler(STATES.MOVEMENTMODE, {
 
     this.emit(':ask', response, reprompt);
   },
+  [INTENTS.CHOOSE_LOC]: chooseLocationHandler,
   [INTENTS.CHECK_POKE]: checkPokeHandler,
   [INTENTS.BAG]: bagHandler,
   [INTENTS.TRAIN]: trainHandler,
